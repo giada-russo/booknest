@@ -1,0 +1,41 @@
+### Registrazione - Creazione di un nuovo utente
+POST http://localhost:8080/api/utenti/registrazione
+Content-Type: application/json
+
+{
+  "nome": "Giada",
+  "cognome": "Russo",
+  "username": "giada",
+  "email": "giada@test.it",
+  "password": "password123"
+}
+
+### Registrazione Duplicata - Verifica dell'eccezione
+POST http://localhost:8080/api/utenti/registrazione
+Content-Type: application/json
+
+{
+  "nome": "Giada",
+  "cognome": "Russo",
+  "username": "giada",
+  "email": "giada@test.it",
+  "password": "password123"
+}
+
+### Login Corretto - Autenticazione riuscita
+POST http://localhost:8080/api/utenti/login
+Content-Type: application/json
+
+{
+  "username": "giada",
+  "password": "password123"
+}
+
+### Login Errato - Verifica dell'eccezione CredenzialiNonValide
+POST http://localhost:8080/api/utenti/login
+Content-Type: application/json
+
+{
+  "username": "giada",
+  "password": "passwordSbagliata"
+}

@@ -18,10 +18,12 @@ public class LibroService {
     private final LibroRepository libroRepository;
 
     public LibroService(LibroRepository libroRepository) {
+
         this.libroRepository = libroRepository;
     }
 
     public List<Libro> trovaTutti() {
+
         return libroRepository.findAll();
     }
 
