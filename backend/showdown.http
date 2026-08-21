@@ -1,0 +1,19 @@
+GET http://localhost:8080/api/showdown/attivi
+
+###
+
+GET http://localhost:8080/api/showdown/1/risultati
+
+###
+
+POST http://localhost:8080/api/showdown/1/voto
+Content-Type: application/json
+X-Utente-Id: 1
+
+{
+  "libroScelto": "A"
+}
+
+###
+
+GET http://localhost:8080/api/showdown/1/risultati
