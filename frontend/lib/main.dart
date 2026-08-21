@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'libro.dart';
+import 'schermata_showdown.dart';
 
 void main() {
   runApp(const BookNestApp());
@@ -14,16 +15,18 @@ class BookNestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BookNest',
-      home: SchermataLibri(),
+      home: const SchermataLibri(),
     );
   }
 }
+
 class SchermataLibri extends StatefulWidget {
   const SchermataLibri({super.key});
 
   @override
   State<SchermataLibri> createState() => _StatoSchermataLibri();
 }
+
 class _StatoSchermataLibri extends State<SchermataLibri> {
   List<Libro> libri = [];
   bool caricamento = true;
@@ -48,7 +51,20 @@ class _StatoSchermataLibri extends State<SchermataLibri> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('BookNest')),
+      appBar: AppBar(
+        title: const Text('BookNest'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.how_to_vote),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SchermataShowdown()),
+              );
+            },
+          ),
+        ],
+      ),
       body: caricamento
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
