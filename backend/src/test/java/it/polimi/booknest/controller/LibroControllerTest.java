@@ -24,19 +24,19 @@ class LibroControllerTest {
     private LibroController libroController;
 
     @Test
-    void trovaTuttiConverteLeEntitaInDTO() {
+    void trovaTuttiRestituisceILibriConVotoMedio() {
         // Arrange
-        Libro libro1 = new Libro("Il nome della rosa", "Umberto Eco", "9788845292613");
-        Libro libro2 = new Libro("1984", "George Orwell", "9788804668237");
+        Libro libro = new Libro("Il nome della rosa", "Umberto Eco", "9788845292613");
+        LibroDTO dto = new LibroDTO(libro, 4.5);
 
-        when(libroService.trovaTutti()).thenReturn(List.of(libro1, libro2));
+        when(libroService.trovaTuttiConVotoMedio()).thenReturn(List.of(dto));
 
         // Act
         List<LibroDTO> risultato = libroController.trovaTutti();
 
         // Assert
-        assertEquals(2, risultato.size());
+        assertEquals(1, risultato.size());
         assertEquals("Il nome della rosa", risultato.get(0).getTitolo());
-        assertEquals("Umberto Eco", risultato.get(0).getAutore());
+        assertEquals(4.5, risultato.get(0).getVotoMedio());
     }
 }

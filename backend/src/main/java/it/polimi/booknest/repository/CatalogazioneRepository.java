@@ -6,6 +6,7 @@ import it.polimi.booknest.model.StatoLettura;
 import it.polimi.booknest.model.Utente;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -79,4 +80,14 @@ public interface CatalogazioneRepository extends JpaRepository<Catalogazione, Lo
      */
     @Query("SELECT c.libro FROM Catalogazione c WHERE c.voto IS NOT NULL GROUP BY c.libro ORDER BY AVG(c.voto) DESC")
     List<Libro> trovaLibriMiglioreVoto();
+
+    /**
+     * Calcola la media dei voti assegnati a un libro dagli utenti che lo hanno catalogato.
+     * Le catalogazioni prive di voto vengono escluse dal calcolo.
+     *
+     * @param libro il libro di cui calcolare la media
+     * @return la media dei voti, oppure {@code null} se nessun utente ha ancora votato il libro
+     */
+    @Query("SELECT AVG(c.voto) FROM Catalogazione c WHERE c.libro = :libro AND c.voto IS NOT NULL")
+    Double calcolaVotoMedio(@Param("libro") Libro libro);
 }

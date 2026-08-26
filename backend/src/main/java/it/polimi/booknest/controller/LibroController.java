@@ -23,14 +23,15 @@ public class LibroController {
     }
 
     /**
-     * Restituisce tutti i libri presenti nel sistema mappati in formato DTO.
+     * Restituisce tutti i libri presenti nel sistema con il rispettivo voto medio.
      * <p>
-     * Risponde alle richieste HTTP GET su {@code /api/libri}.
+     * Risponde alle richieste HTTP GET su {@code /api/libri}. Endpoint pubblico,
+     * accessibile anche ai visitatori non registrati.
      *
      * @return la lista completa dei {@link LibroDTO} disponibili
      */
     @GetMapping("/api/libri")
     public List<LibroDTO> trovaTutti() {
-        return libroService.trovaTutti().stream().map(LibroDTO::new).toList();
+        return libroService.trovaTuttiConVotoMedio();
     }
 }
