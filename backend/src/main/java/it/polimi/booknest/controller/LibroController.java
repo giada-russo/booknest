@@ -1,6 +1,6 @@
 package it.polimi.booknest.controller;
 
-import it.polimi.booknest.model.Libro;
+import it.polimi.booknest.dto.LibroDTO;
 import it.polimi.booknest.service.LibroService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,7 +11,7 @@ import java.util.List;
  * Espone gli endpoint REST relativi ai libri del catalogo.
  * <p>
  * Riceve le richieste HTTP provenienti dal client, delega l'elaborazione
- * a {@link LibroService} e restituisce i risultati in formato JSON.
+ * a {@link LibroService} e restituisce i risultati in formato JSON sotto forma di DTO.
  */
 @RestController
 public class LibroController {
@@ -23,14 +23,14 @@ public class LibroController {
     }
 
     /**
-     * Restituisce tutti i libri presenti nel sistema.
+     * Restituisce tutti i libri presenti nel sistema mappati in formato DTO.
      * <p>
      * Risponde alle richieste HTTP GET su {@code /api/libri}.
      *
-     * @return la lista completa dei {@link Libro} disponibili
+     * @return la lista completa dei {@link LibroDTO} disponibili
      */
     @GetMapping("/api/libri")
-    public List<Libro> trovaTutti() {
-        return libroService.trovaTutti();
+    public List<LibroDTO> trovaTutti() {
+        return libroService.trovaTutti().stream().map(LibroDTO::new).toList();
     }
 }

@@ -1,0 +1,17 @@
+GET http://localhost:8080/api/classifica/criteri
+
+###
+
+GET http://localhost:8080/api/classifica/libri/piu-catalogati
+
+###
+
+GET http://localhost:8080/api/classifica/libri/piu-recensiti
+
+###
+
+GET http://localhost:8080/api/classifica/libri/migliore-voto
+
+###
+
+GET http://localhost:8080/api/classifica/libri/inesistente

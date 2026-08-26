@@ -8,7 +8,9 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
+import it.polimi.booknest.exception.LibroNonTrovatoException;
 import it.polimi.booknest.exception.RecensioneGiaEsistenteException;
+import it.polimi.booknest.exception.RecensioneNonTrovataException;
 import it.polimi.booknest.model.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -127,5 +129,63 @@ class RecensioneServiceTest {
 
         // Verify che il salvataggio non venga mai invocato e che non si proceda oltre
         verify(recensioneRepository, never()).save(any());
+    }
+
+    @Test
+    void scriviSuLibroNonLettoSollevaEccezione() {
+        // Arrange
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Il nome della rosa", "Umberto Eco", "9788845292613");
+        Catalogazione catalogazione = new Catalogazione(utente, libro);
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(5L)).thenReturn(Optional.of(libro));
+        when(recensioneRepository.existsByUtenteAndLibro(utente, libro)).thenReturn(false);
+        when(catalogazioneRepository.findByUtenteAndLibro(utente, libro))
+                .thenReturn(Optional.of(catalogazione));
+
+        // Act + Assert
+        assertThrows(RecensioneNonConsentitaException.class,
+                () -> recensioneService.scrivi(1L, 5L, "Bellissimo", true));
+    }
+
+    @Test
+    void scriviRecensioneDuplicataSollevaEccezione() {
+        // Arrange
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Il nome della rosa", "Umberto Eco", "9788845292613");
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(5L)).thenReturn(Optional.of(libro));
+        when(recensioneRepository.existsByUtenteAndLibro(utente, libro)).thenReturn(true);
+
+        // Act + Assert
+        assertThrows(RecensioneGiaEsistenteException.class,
+                () -> recensioneService.scrivi(1L, 5L, "Bellissimo", true));
+    }
+
+    @Test
+    void scriviSuLibroInesistenteSollevaEccezione() {
+        // Arrange
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Act + Assert
+        assertThrows(LibroNonTrovatoException.class,
+                () -> recensioneService.scrivi(1L, 99L, "Bellissimo", true));
+    }
+
+    @Test
+    void modificaRecensioneInesistenteSollevaEccezione() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Il nome della rosa", "Umberto Eco", "9788845292613");
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(5L)).thenReturn(Optional.of(libro));
+        when(recensioneRepository.findByUtenteAndLibro(utente, libro)).thenReturn(Optional.empty());
+
+        assertThrows(RecensioneNonTrovataException.class,
+                () -> recensioneService.modifica(1L, 5L, "Rivisto", true));
     }
 }

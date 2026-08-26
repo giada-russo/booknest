@@ -5,6 +5,7 @@ import it.polimi.booknest.model.Libro;
 import it.polimi.booknest.model.StatoLettura;
 import it.polimi.booknest.model.Utente;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -56,4 +57,26 @@ public interface CatalogazioneRepository extends JpaRepository<Catalogazione, Lo
      */
     List<Catalogazione> findByUtenteAndStatoOrderByDataCompletamentoDesc(Utente utente, StatoLettura stato);
 
+    /**
+     * Restituisce l'elenco dei libri ordinati in base alla loro popolarità (numero di catalogazioni),
+     * dal più catalogato al meno catalogato.
+     * <p>
+     * Sfrutta una query JPQL (Java Persistence Query Language) per raggruppare e contare le occorrenze.
+     * Questa classifica viene utilizzata per la generazione automatica delle sfide nei duelli Showdown.
+     * </p>
+     *
+     * @return una lista di {@link Libro} ordinata per numero di catalogazioni decrescente
+     */
+    @Query("SELECT c.libro FROM Catalogazione c GROUP BY c.libro ORDER BY COUNT(c) DESC")
+    List<Libro> trovaLibriPiuCatalogati();
+
+    /**
+     * Recupera l'elenco dei libri ordinati in base alla media dei voti ricevuti nelle catalogazioni, in ordine decrescente.
+     * Vengono prese in considerazione solo le catalogazioni che presentano un voto valido (diverso da null),
+     * raggruppando i risultati per libro e calcolando la media aritmetica dei voti.
+     *
+     * @return una lista di oggetti {@link Libro} ordinata per media voti decrescente
+     */
+    @Query("SELECT c.libro FROM Catalogazione c WHERE c.voto IS NOT NULL GROUP BY c.libro ORDER BY AVG(c.voto) DESC")
+    List<Libro> trovaLibriMiglioreVoto();
 }

@@ -162,4 +162,50 @@ class CatalogazioneServiceTest {
         // Assert
         verify(catalogazioneRepository, never()).save(any());
     }
+    @Test
+    void catalogaLibroGiaPresenteSollevaEccezione() {
+        // Arrange
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Il nome della rosa", "Umberto Eco", "9788845292613");
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(5L)).thenReturn(Optional.of(libro));
+        when(catalogazioneRepository.existsByUtenteAndLibro(utente, libro)).thenReturn(true);
+
+        // Act + Assert
+        assertThrows(LibroGiaCatalogatoException.class,
+                () -> catalogazioneService.cataloga(1L, 5L));
+    }
+
+    @Test
+    void cambiaStatoNonValidoSollevaEccezione() {
+        // Arrange
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Il nome della rosa", "Umberto Eco", "9788845292613");
+        Catalogazione catalogazione = new Catalogazione(utente, libro); // Nasce DA_LEGGERE
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(5L)).thenReturn(Optional.of(libro));
+        when(catalogazioneRepository.findByUtenteAndLibro(utente, libro)).thenReturn(Optional.of(catalogazione));
+
+        // Act + Assert
+        assertThrows(TransizioneNonValidaException.class,
+                () -> catalogazioneService.cambiaStato(1L, 5L, StatoLettura.ABBANDONATO));
+    }
+
+    @Test
+    void assegnaVotoSuLibroNonLettoSollevaEccezione() {
+        // Arrange
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Il nome della rosa", "Umberto Eco", "9788845292613");
+        Catalogazione catalogazione = new Catalogazione(utente, libro); // Nasce DA_LEGGERE (quindi non permette voto)
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(5L)).thenReturn(Optional.of(libro));
+        when(catalogazioneRepository.findByUtenteAndLibro(utente, libro)).thenReturn(Optional.of(catalogazione));
+
+        // Act + Assert
+        assertThrows(VotoNonConsentitoException.class,
+                () -> catalogazioneService.assegnaVoto(1L, 5L, 4));
+    }
 }

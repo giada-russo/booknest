@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import it.polimi.booknest.model.Libro;
 import it.polimi.booknest.model.Recensione;
 import it.polimi.booknest.model.Utente;
+import org.springframework.data.jpa.repository.Query;
 
 /**
  * Repository JPA per la gestione e la persistenza delle entità {@link Recensione}.
@@ -47,4 +48,13 @@ public interface RecensioneRepository extends JpaRepository<Recensione, Long> {
      * @return una lista delle recensioni dell'utente
      */
     List<Recensione> findByUtente(Utente utente);
+
+    /**
+     * Recupera l'elenco dei libri ordinati in base al numero di recensioni ricevute, in ordine decrescente.
+     * La query raggruppa le recensioni per libro, ne conta le occorrenze e ordina i risultati dal più recensito al meno recensito.
+     *
+     * @return una lista di oggetti {@link Libro} ordinata per popolarità basata sulle recensioni
+     */
+    @Query("SELECT r.libro FROM Recensione r GROUP BY r.libro ORDER BY COUNT(r) DESC")
+    List<Libro> trovaLibriPiuRecensiti();
 }

@@ -5,6 +5,8 @@ import it.polimi.booknest.model.Libro;
 import it.polimi.booknest.model.LibroScelto;
 import it.polimi.booknest.model.Showdown;
 import it.polimi.booknest.model.Utente;
+import it.polimi.booknest.repository.CatalogazioneRepository;
+import it.polimi.booknest.repository.LibroRepository;
 import it.polimi.booknest.repository.ShowdownRepository;
 import it.polimi.booknest.repository.VotoShowdownRepository;
 import org.junit.jupiter.api.Test;
@@ -32,6 +34,8 @@ public class ShowdownServiceTest {
     private VotoShowdownRepository votoShowdownRepository;
     @Mock
     private UtenteService utenteService;
+    @Mock private CatalogazioneRepository catalogazioneRepository;
+    @Mock private LibroRepository libroRepository;
     @InjectMocks
     private ShowdownService showdownService;
 
