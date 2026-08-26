@@ -90,4 +90,24 @@ public interface CatalogazioneRepository extends JpaRepository<Catalogazione, Lo
      */
     @Query("SELECT AVG(c.voto) FROM Catalogazione c WHERE c.libro = :libro AND c.voto IS NOT NULL")
     Double calcolaVotoMedio(@Param("libro") Libro libro);
+
+    /**
+     * Trova i libri correlati a un dato libro in base alle preferenze degli utenti.
+     * <p>
+     * La query individua tutti gli utenti che hanno catalogato il libro di partenza
+     * e restituisce gli altri libri presenti nelle loro catalogazioni, ordinati per
+     * frequenza decrescente di comparizione.
+     * </p>
+     *
+     * @param libro il {@link Libro} di riferimento per cui cercare affinità
+     * @return una lista di {@link Libro} affini, ordinata per popolarità tra gli stessi lettori
+     */
+    @Query("""
+        SELECT c2.libro FROM Catalogazione c2
+        WHERE c2.libro <> :libro
+          AND c2.utente IN (SELECT c1.utente FROM Catalogazione c1 WHERE c1.libro = :libro)
+        GROUP BY c2.libro
+        ORDER BY COUNT(c2) DESC
+        """)
+    List<Libro> trovaLibriSimili(@Param("libro") Libro libro);
 }

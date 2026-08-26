@@ -39,4 +39,18 @@ class LibroControllerTest {
         assertEquals("Il nome della rosa", risultato.get(0).getTitolo());
         assertEquals(4.5, risultato.get(0).getVotoMedio());
     }
+
+    @Test
+    void trovaSimiliRestituisceISuggerimentiDelService() {
+        // Arrange
+        Libro libro = new Libro("1984", "George Orwell", "9788804668237");
+        when(libroService.trovaLibriSimili(1L)).thenReturn(List.of(new LibroDTO(libro)));
+
+        // Act
+        List<LibroDTO> risultato = libroController.trovaSimili(1L);
+
+        // Assert
+        assertEquals(1, risultato.size());
+        assertEquals("1984", risultato.get(0).getTitolo());
+    }
 }

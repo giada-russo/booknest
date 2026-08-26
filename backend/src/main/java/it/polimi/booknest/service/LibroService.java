@@ -1,6 +1,7 @@
 package it.polimi.booknest.service;
 
 import it.polimi.booknest.dto.LibroDTO;
+import it.polimi.booknest.exception.LibroNonTrovatoException;
 import it.polimi.booknest.model.Libro;
 import it.polimi.booknest.repository.CatalogazioneRepository;
 import it.polimi.booknest.repository.LibroRepository;
@@ -50,6 +51,27 @@ public class LibroService {
         return libroRepository.findAll()
                 .stream()
                 .map(libro -> new LibroDTO(libro, catalogazioneRepository.calcolaVotoMedio(libro)))
+                .toList();
+    }
+
+    /**
+     * Restituisce fino a cinque libri simili a quello indicato, individuati in base
+     * alle catalogazioni degli altri utenti (filtraggio collaborativo).
+     * <p>
+     * La lista è vuota se nessun altro utente ha catalogato il libro insieme ad altri.
+     *
+     * @param idLibro l'identificativo del libro di riferimento
+     * @return la lista dei libri simili, al massimo cinque
+     * @throws LibroNonTrovatoException se il libro non esiste
+     */
+    public List<LibroDTO> trovaLibriSimili(Long idLibro) {
+        Libro libro = libroRepository.findById(idLibro)
+                .orElseThrow(() -> new LibroNonTrovatoException(idLibro));
+
+        return catalogazioneRepository.trovaLibriSimili(libro)
+                .stream()
+                .limit(5)
+                .map(LibroDTO::new)
                 .toList();
     }
 }

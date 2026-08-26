@@ -1,8 +1,10 @@
 package it.polimi.booknest.controller;
 
 import it.polimi.booknest.dto.LibroDTO;
+import it.polimi.booknest.exception.LibroNonTrovatoException;
 import it.polimi.booknest.service.LibroService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -33,5 +35,21 @@ public class LibroController {
     @GetMapping("/api/libri")
     public List<LibroDTO> trovaTutti() {
         return libroService.trovaTuttiConVotoMedio();
+    }
+
+    /**
+     * Restituisce i libri simili a quello indicato, suggeriti in base alle
+     * catalogazioni degli altri utenti.
+     * <p>
+     * Risponde alle richieste HTTP GET su {@code /api/libri/{idLibro}/simili}.
+     * Endpoint pubblico, accessibile anche ai visitatori non registrati.
+     *
+     * @param idLibro l'identificativo del libro di riferimento
+     * @return la lista dei {@link LibroDTO} suggeriti, al massimo cinque
+     * @throws LibroNonTrovatoException se il libro non esiste
+     */
+    @GetMapping("/api/libri/{idLibro}/simili")
+    public List<LibroDTO> trovaSimili(@PathVariable Long idLibro) {
+        return libroService.trovaLibriSimili(idLibro);
     }
 }
