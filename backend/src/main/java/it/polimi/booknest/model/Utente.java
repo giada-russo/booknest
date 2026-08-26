@@ -3,6 +3,9 @@ package it.polimi.booknest.model;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Rappresenta un utente registrato della piattaforma BookNest.
  * <p>
@@ -27,6 +30,20 @@ public class Utente {
     private String email;
     @Column(nullable = false)
     private String passwordHash;
+    /**
+     * Utenti seguiti da questo utente.
+     * <p>
+     * Relazione molti-a-molti riflessiva: la tabella {@code follow} associa
+     * l'utente che segue (colonna {@code seguace_id}) a quello seguito
+     * (colonna {@code seguito_id}).
+     */
+    @ManyToMany
+    @JoinTable(
+            name = "follow",
+            joinColumns = @JoinColumn(name = "seguace_id"),
+            inverseJoinColumns = @JoinColumn(name = "seguito_id")
+    )
+    private Set<Utente> seguiti = new HashSet<>();
 
 
     public Utente(String nome, String cognome, String username, String email,  String passwordHash) {
@@ -61,6 +78,10 @@ public class Utente {
 
     public String getPasswordHash() {
         return passwordHash;
+    }
+
+    public Set<Utente> getSeguiti() {
+        return seguiti;
     }
 
     public void setEmail(String email) {

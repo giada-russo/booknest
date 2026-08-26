@@ -27,7 +27,7 @@ public class GestoreEccezioni {
     }
 
     /**
-     * Gestisce i conflitti con lo stato corrente della risorsa: duplicati e operazioni non consentite dallo stato della catalogazione.
+     * Gestisce i conflitti con lo stato corrente della risorsa: duplicati e operazioni non consentite.
      */
     @ExceptionHandler({
             EmailGiaEsistenteException.class,
@@ -38,7 +38,9 @@ public class GestoreEccezioni {
             ShowdownNonAttivoException.class,
             TransizioneNonValidaException.class,
             RecensioneNonConsentitaException.class,
-            VotoNonConsentitoException.class
+            VotoNonConsentitoException.class,
+            GiaSeguitoException.class,
+            AutoFollowException.class
     })
     public ResponseEntity<String> gestisciConflitto(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());

@@ -11,7 +11,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,5 +66,37 @@ class UtenteControllerTest {
         // Assert
         assertEquals("romibat27", risultato.getUsername());
         assertEquals("romibat@gmail.com", risultato.getEmail());
+    }
+
+    @Test
+    void seguiDelegaAlService() {
+        // Act
+        utenteController.segui(1L, 2L);
+
+        // Assert
+        verify(utenteService).segui(1L, 2L);
+    }
+
+    @Test
+    void smettiDiSeguireDelegaAlService() {
+        // Act
+        utenteController.smettiDiSeguire(1L, 2L);
+
+        // Assert
+        verify(utenteService).smettiDiSeguire(1L, 2L);
+    }
+
+    @Test
+    void trovaSeguitiConverteGliUtentiInDTO() {
+        // Arrange
+        Utente seguito = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
+        when(utenteService.trovaSeguiti(1L)).thenReturn(Set.of(seguito));
+
+        // Act
+        List<UtenteDTO> risultato = utenteController.trovaSeguiti(1L);
+
+        // Assert
+        assertEquals(1, risultato.size());
+        assertEquals("marcoros", risultato.get(0).getUsername());
     }
 }

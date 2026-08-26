@@ -1,13 +1,12 @@
 package it.polimi.booknest.service;
 
-import it.polimi.booknest.exception.CredenzialiNonValideException;
-import it.polimi.booknest.exception.EmailGiaEsistenteException;
-import it.polimi.booknest.exception.UsernameGiaEsistenteException;
-import it.polimi.booknest.exception.UtenteNonTrovatoException;
+import it.polimi.booknest.exception.*;
 import it.polimi.booknest.model.Utente;
 import it.polimi.booknest.repository.UtenteRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Set;
 
 /**
  * Gestisce la registrazione, l'autenticazione e il recupero degli utenti.
@@ -97,5 +96,60 @@ public class UtenteService {
     public Utente trovaPerId(Long id){
         return utenteRepository.findById(id)
                 .orElseThrow(()->new UtenteNonTrovatoException(id));
+    }
+
+    /**
+     * Registra il fatto che un utente inizi a seguirne un altro.
+     *
+     * @param idSeguace l'identificativo dell'utente che segue
+     * @param idSeguito l'identificativo dell'utente da seguire
+     * @throws UtenteNonTrovatoException se uno dei due utenti non esiste
+     * @throws AutoFollowException       se i due identificativi coincidono
+     * @throws GiaSeguitoException       se l'utente segue già la persona indicata
+     */
+    public void segui(Long idSeguace, Long idSeguito) {
+        if (idSeguace.equals(idSeguito)) {
+            throw new AutoFollowException(idSeguace);
+        }
+
+        Utente seguace = trovaPerId(idSeguace);
+        Utente seguito = trovaPerId(idSeguito);
+
+        if (!seguace.getSeguiti().add(seguito)) {
+            throw new GiaSeguitoException(idSeguace, idSeguito);
+        }
+
+        utenteRepository.save(seguace);
+    }
+
+    /**
+     * Interrompe la relazione di follow tra due utenti.
+     * <p>
+     * Se l'utente non seguiva la persona indicata, l'operazione non ha effetto:
+     * lo stato finale è quello desiderato dal chiamante (idempotenza).
+     *
+     * @param idSeguace l'identificativo dell'utente che smette di seguire
+     * @param idSeguito l'identificativo dell'utente da non seguire più
+     * @throws UtenteNonTrovatoException se uno dei due utenti non esiste
+     */
+    public void smettiDiSeguire(Long idSeguace, Long idSeguito) {
+        Utente seguace = trovaPerId(idSeguace);
+        Utente seguito = trovaPerId(idSeguito);
+        seguace.getSeguiti().remove(seguito);
+        utenteRepository.save(seguace);
+    }
+
+    /**
+     * Restituisce l'insieme degli utenti seguiti dall'utente specificato.
+     * <p>
+     * Sfrutta il controllo preventivo tramite ID per assicurarsi che l'utente esista;
+     * in caso contrario, solleva un'eccezione anziché restituire un insieme vuoto.
+     *
+     * @param idUtente l'identificativo dell'utente di cui si vogliono conoscere i seguiti
+     * @return un insieme di {@link Utente} seguiti
+     * @throws UtenteNonTrovatoException se l'utente di riferimento non esiste
+     */
+    public Set<Utente> trovaSeguiti(Long idUtente) {
+        return trovaPerId(idUtente).getSeguiti();
     }
 }

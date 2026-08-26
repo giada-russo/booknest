@@ -1,9 +1,6 @@
 package it.polimi.booknest.service;
 
-import it.polimi.booknest.exception.CredenzialiNonValideException;
-import it.polimi.booknest.exception.EmailGiaEsistenteException;
-import it.polimi.booknest.exception.UsernameGiaEsistenteException;
-import it.polimi.booknest.exception.UtenteNonTrovatoException;
+import it.polimi.booknest.exception.*;
 import it.polimi.booknest.model.Utente;
 import it.polimi.booknest.repository.UtenteRepository;
 import org.junit.jupiter.api.Test;
@@ -15,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,7 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class UtenteServiceTest {
+class UtenteServiceTest {
 
     @Mock
     UtenteRepository utenteRepository;
@@ -78,8 +76,7 @@ public class UtenteServiceTest {
 
         assertEquals(hashFinto, utenteSalvato.getPasswordHash());
         assertEquals(usernameTest, utenteSalvato.getUsername());
-        assertEquals(email,utenteSalvato.getEmail());
-
+        assertEquals(email, utenteSalvato.getEmail());
     }
 
     @Test
@@ -104,8 +101,7 @@ public class UtenteServiceTest {
     }
 
     @Test
-    void loginRiuscito(){
-
+    void loginRiuscito() {
         //Arrange
         String nome = "Mario";
         String cognome = "Rossi";
@@ -117,10 +113,9 @@ public class UtenteServiceTest {
         Utente utenteFittizio = new Utente(nome, cognome, usernameTest, email, hashFinto);
 
         when(utenteRepository.findByUsername(usernameTest)).thenReturn(Optional.of(utenteFittizio));
+        when(passwordEncoder.matches(password, hashFinto)).thenReturn(true);
 
-        when(passwordEncoder.matches(password,hashFinto)).thenReturn(true);
-
-        Utente risultato = utenteService.login(usernameTest,password);
+        Utente risultato = utenteService.login(usernameTest, password);
 
         assertSame(utenteFittizio, risultato);
     }
@@ -133,12 +128,9 @@ public class UtenteServiceTest {
         String usernameTest = "mario88";
         String email = "mario@email.it";
         String hashFinto = "hash_finto";
-
         String passwordSbagliata = "PasswordErrata!";
 
-
         Utente utenteFinto = new Utente(nome, cognome, usernameTest, email, hashFinto);
-
 
         when(utenteRepository.findByUsername(usernameTest)).thenReturn(Optional.of(utenteFinto));
         when(passwordEncoder.matches(passwordSbagliata, hashFinto)).thenReturn(false);
@@ -174,5 +166,74 @@ public class UtenteServiceTest {
         assertThrows(UtenteNonTrovatoException.class, () -> {
             utenteService.trovaPerId(idInesistente);
         });
+    }
+
+    @Test
+    void seguiAggiungeUtenteAiSeguiti() {
+        // Arrange
+        Utente seguace = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Utente seguito = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
+        when(utenteRepository.findById(1L)).thenReturn(Optional.of(seguace));
+        when(utenteRepository.findById(2L)).thenReturn(Optional.of(seguito));
+
+        // Act
+        utenteService.segui(1L, 2L);
+
+        // Assert
+        assertTrue(seguace.getSeguiti().contains(seguito));
+        verify(utenteRepository).save(seguace);
+    }
+
+    @Test
+    void seguireSeStessiSollevaEccezione() {
+        // Act + Assert
+        assertThrows(AutoFollowException.class, () -> utenteService.segui(1L, 1L));
+    }
+
+    @Test
+    void seguireDueVolteLaStessaPersonaSollevaEccezione() {
+        Utente seguace = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Utente seguito = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
+        seguace.getSeguiti().add(seguito);
+
+        when(utenteRepository.findById(1L)).thenReturn(Optional.of(seguace));
+        when(utenteRepository.findById(2L)).thenReturn(Optional.of(seguito));
+
+        assertThrows(GiaSeguitoException.class, () -> utenteService.segui(1L, 2L));
+    }
+
+    @Test
+    void smettiDiSeguireRimuoveUtenteDaiSeguiti() {
+        // Arrange
+        Utente seguace = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Utente seguito = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
+        seguace.getSeguiti().add(seguito);
+
+        when(utenteRepository.findById(1L)).thenReturn(Optional.of(seguace));
+        when(utenteRepository.findById(2L)).thenReturn(Optional.of(seguito));
+
+        // Act
+        utenteService.smettiDiSeguire(1L, 2L);
+
+        // Assert
+        assertFalse(seguace.getSeguiti().contains(seguito));
+        verify(utenteRepository).save(seguace);
+    }
+
+    @Test
+    void trovaSeguitiRestituisceGliUtentiSeguiti() {
+        // Arrange
+        Utente seguace = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Utente seguito = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
+        seguace.getSeguiti().add(seguito);
+
+        when(utenteRepository.findById(1L)).thenReturn(Optional.of(seguace));
+
+        // Act
+        Set<Utente> risultato = utenteService.trovaSeguiti(1L);
+
+        // Assert
+        assertEquals(1, risultato.size());
+        assertTrue(risultato.contains(seguito));
     }
 }
