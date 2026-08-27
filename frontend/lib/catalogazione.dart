@@ -9,6 +9,7 @@ class Catalogazione {
   final String stato;
   final int? voto;
   final int idLibro;
+  final String? dataCompletamento;
 
   Catalogazione({
     required this.id,
@@ -17,6 +18,7 @@ class Catalogazione {
     required this.stato,
     this.voto,
     required this.idLibro,
+    this.dataCompletamento,
   });
 
   /// Costruisce una [Catalogazione] dalla mappa JSON restituita dal backend.
@@ -30,6 +32,7 @@ class Catalogazione {
       stato: json['stato'],
       voto: json['voto'],
       idLibro: json['idLibro'],
+      dataCompletamento: json['dataCompletamento'],
     );
   }
 }
