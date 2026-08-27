@@ -100,65 +100,59 @@ class _StatoSchermataShowdown extends State<SchermataShowdown> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Showdown')),
-      body: caricamento
-          ? const Center(child: CircularProgressIndicator())
-          : errore != null
-          ? Center(child: Text(errore!))
-          : ListView.builder(
-        itemCount: sondaggi.length,
-        itemBuilder: (context, index) {
-          final sondaggio = sondaggi[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${sondaggio.titoloLibroA} di ${sondaggio.autoreLibroA}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16.0),
+    if (caricamento) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (errore != null) {
+      return Center(child: Text(errore!));
+    }
+    return ListView.builder(
+      itemCount: sondaggi.length,
+      itemBuilder: (context, index) {
+        final sondaggio = sondaggi[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${sondaggio.titoloLibroA} di ${sondaggio.autoreLibroA}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16.0),
+                ),
+                const SizedBox(height: 8.0),
+                ElevatedButton(
+                  onPressed: () => vota(sondaggio.id, 'A'),
+                  child: const Text('Vota A'),
+                ),
+                const SizedBox(height: 8.0),
+                Text('${risultati[sondaggio.id]?['A'] ?? 0} voti'),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12.0),
+                  child: Text(
+                    'VS',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
                   ),
-                  const SizedBox(height: 8.0),
-                  ElevatedButton(
-                    onPressed: () => vota(sondaggio.id, 'A'),
-                    child: const Text('Vota A'),
-                  ),
-                  const SizedBox(height: 8.0),
-                  Text('${risultati[sondaggio.id]?['A'] ?? 0} voti'),
-
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12.0),
-                    child: Text(
-                      'VS',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
-                      ),
-                    ),
-                  ),
-
-                  Text(
-                    '${sondaggio.titoloLibroB} di ${sondaggio.autoreLibroB}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16.0),
-                  ),
-                  const SizedBox(height: 8.0),
-                  ElevatedButton(
-                    onPressed: () => vota(sondaggio.id, 'B'),
-                    child: const Text('Vota B'),
-                  ),
-                  const SizedBox(height: 8.0),
-                  Text('${risultati[sondaggio.id]?['B'] ?? 0} voti'),
-                ],
-              ),
+                ),
+                Text(
+                  '${sondaggio.titoloLibroB} di ${sondaggio.autoreLibroB}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16.0),
+                ),
+                const SizedBox(height: 8.0),
+                ElevatedButton(
+                  onPressed: () => vota(sondaggio.id, 'B'),
+                  child: const Text('Vota B'),
+                ),
+                const SizedBox(height: 8.0),
+                Text('${risultati[sondaggio.id]?['B'] ?? 0} voti'),
+              ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

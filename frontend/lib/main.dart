@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'libro.dart';
 import 'schermata_showdown.dart';
+import 'schermata_classifica.dart';
+import 'schermata_libreria.dart';
 
 void main() {
   runApp(const BookNestApp());
@@ -15,7 +17,48 @@ class BookNestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BookNest',
-      home: const SchermataLibri(),
+      home: const SchermataPrincipale(),
+    );
+  }
+}
+
+/// Contenitore principale dell'applicazione.
+///
+/// Gestisce la navigazione tra le sezioni tramite una barra inferiore:
+/// il contenuto mostrato dipende dall'indice della sezione selezionata.
+class SchermataPrincipale extends StatefulWidget {
+  const SchermataPrincipale({super.key});
+
+  @override
+  State<SchermataPrincipale> createState() => _StatoSchermataPrincipale();
+}
+
+class _StatoSchermataPrincipale extends State<SchermataPrincipale> {
+  int indiceSezione = 0;
+
+  /// Le sezioni navigabili, nello stesso ordine delle voci della barra.
+  final List<Widget> sezioni = const [
+    SchermataLibri(),
+    SchermataShowdown(),
+    SchermataClassifica(),
+    SchermataLibreria(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('BookNest')),
+      body: sezioni[indiceSezione],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: indiceSezione,
+        onTap: (indice) => setState(() => indiceSezione = indice),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Catalogo'),
+          BottomNavigationBarItem(icon: Icon(Icons.how_to_vote), label: 'Showdown'),
+          BottomNavigationBarItem(icon: Icon(Icons.leaderboard), label: 'Classifica'),
+          BottomNavigationBarItem(icon: Icon(Icons.library_books), label: 'Libreria'),
+        ],
+      ),
     );
   }
 }
@@ -63,34 +106,20 @@ class _StatoSchermataLibri extends State<SchermataLibri> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('BookNest'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.how_to_vote),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SchermataShowdown()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: caricamento
-          ? const Center(child: CircularProgressIndicator())
-          : errore
-          ? const Center(child: Text('Impossibile caricare il catalogo'))
-          : ListView.builder(
-        itemCount: libri.length,
-        itemBuilder: (context, i) => ListTile(
-          title: Text(libri[i].titolo),
-          subtitle: Text(libri[i].autore),
-          trailing: libri[i].votoMedio == null
-              ? const Text('—')
-              : Text('★ ${libri[i].votoMedio!.toStringAsFixed(1)}'),
-        ),
+    if (caricamento) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (errore) {
+      return const Center(child: Text('Impossibile caricare il catalogo'));
+    }
+    return ListView.builder(
+      itemCount: libri.length,
+      itemBuilder: (context, i) => ListTile(
+        title: Text(libri[i].titolo),
+        subtitle: Text(libri[i].autore),
+        trailing: libri[i].votoMedio == null
+            ? const Text('—')
+            : Text('★ ${libri[i].votoMedio!.toStringAsFixed(1)}'),
       ),
     );
   }

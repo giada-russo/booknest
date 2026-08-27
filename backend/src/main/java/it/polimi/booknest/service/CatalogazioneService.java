@@ -104,7 +104,8 @@ public class CatalogazioneService {
         // Delega la validazione e il cambio di stato al Pattern State per incapsulare le logiche di dominio.
         c.cambiaStato(nuovoStato);
 
-        return catalogazioneRepository.save(c);
+        catalogazioneRepository.save(c);
+        return c;
     }
 
     /**
@@ -123,7 +124,8 @@ public class CatalogazioneService {
     public Catalogazione assegnaVoto(Long idUtente, Long idLibro, int voto) {
         Catalogazione c = trovaCatalogazione(idUtente, idLibro);
         c.assegnaVoto(voto);
-        return catalogazioneRepository.save(c);
+        catalogazioneRepository.save(c);
+        return c;
     }
 
     /**

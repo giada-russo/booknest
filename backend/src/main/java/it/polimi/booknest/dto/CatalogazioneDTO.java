@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class CatalogazioneDTO {
 
     private Long id;
+    private Long idLibro;
     private String titoloLibro;
     private String autoreLibro;
     private String stato;
@@ -29,6 +30,7 @@ public class CatalogazioneDTO {
      */
     public CatalogazioneDTO(Catalogazione catalogazione) {
         this.id = catalogazione.getId();
+        this.idLibro = catalogazione.getLibro().getId();
         this.titoloLibro = catalogazione.getLibro().getTitolo();
         this.autoreLibro = catalogazione.getLibro().getAutore();
         this.stato = catalogazione.getStato().name();
@@ -38,6 +40,10 @@ public class CatalogazioneDTO {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getIdLibro() {
+        return idLibro;
     }
 
     public String getTitoloLibro() {

@@ -19,22 +19,30 @@ import java.util.Optional;
 public interface CatalogazioneRepository extends JpaRepository<Catalogazione, Long> {
 
     /**
-     * Recupera l'elenco di tutte le catalogazioni associate a un determinato utente.
+     * Recupera l'elenco delle catalogazioni di un utente, caricando insieme
+     * il libro associato.
+     * <p>
+     * Il {@code JOIN FETCH} è necessario perché la relazione con {@link Libro}
+     * è LAZY e la sessione Hibernate si chiude al termine del service
+     * ({@code open-in-view=false}): senza, la conversione in DTO fallirebbe.
      *
-     * @param utente L'utente proprietario della libreria.
-     * @return Una lista contenente le catalogazioni trovate (potrebbe essere vuota).
+     * @param utente l'utente proprietario della libreria
+     * @return le catalogazioni dell'utente, con il libro già caricato
      */
-    List<Catalogazione> findByUtente(Utente utente);
+    @Query("SELECT c FROM Catalogazione c JOIN FETCH c.libro WHERE c.utente = :utente")
+    List<Catalogazione> findByUtente(@Param("utente") Utente utente);
 
     /**
-     * Cerca una specifica catalogazione associando un utente a un libro.
+     * Cerca una specifica catalogazione associando un utente a un libro,
+     * caricando esplicitamente anche il libro associato tramite {@code JOIN FETCH}.
      * Dato il vincolo di unicità sulla coppia utente-libro, restituisce al massimo un risultato.
      *
      * @param utente L'utente che ha effettuato la catalogazione.
      * @param libro Il libro cercato.
      * @return Un {@link Optional} contenente la catalogazione se esiste, altrimenti vuoto.
      */
-    Optional<Catalogazione> findByUtenteAndLibro(Utente utente, Libro libro);
+    @Query("SELECT c FROM Catalogazione c JOIN FETCH c.libro WHERE c.utente = :utente AND c.libro = :libro")
+    Optional<Catalogazione> findByUtenteAndLibro(@Param("utente") Utente utente, @Param("libro") Libro libro);
 
     /**
      * Verifica l'esistenza di una catalogazione per la coppia utente-libro data,
@@ -46,17 +54,23 @@ public interface CatalogazioneRepository extends JpaRepository<Catalogazione, Lo
      */
     boolean existsByUtenteAndLibro(Utente utente, Libro libro);
 
-
     /**
      * Trova tutte le catalogazioni di un determinato utente associate a uno specifico stato di lettura,
-     * ordinate cronologicamente dalla più recente alla meno recente in base alla data di completamento.
+     * ordinate cronologicamente dalla più recente alla meno recente in base alla data di completamento,
+     * caricando esplicitamente anche il libro associato tramite {@code JOIN FETCH}.
      * Utilizzato per alimentare il diario di lettura.
      *
      * @param utente l'utente di cui recuperare la cronologia
      * @param stato  lo stato di lettura da filtrare (es. {@link StatoLettura#LETTO})
      * @return una lista di catalogazioni ordinate per data di completamento discendente
      */
-    List<Catalogazione> findByUtenteAndStatoOrderByDataCompletamentoDesc(Utente utente, StatoLettura stato);
+    @Query("""
+        SELECT c FROM Catalogazione c JOIN FETCH c.libro
+        WHERE c.utente = :utente AND c.stato = :stato
+        ORDER BY c.dataCompletamento DESC
+        """)
+    List<Catalogazione> findByUtenteAndStatoOrderByDataCompletamentoDesc(
+            @Param("utente") Utente utente, @Param("stato") StatoLettura stato);
 
     /**
      * Restituisce l'elenco dei libri ordinati in base alla loro popolarità (numero di catalogazioni),
