@@ -1,10 +1,12 @@
 package it.polimi.booknest.service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -180,19 +182,36 @@ public class ShowdownService {
     }
 
     /**
-     * Genera automaticamente un nuovo duello Showdown ogni ora, selezionando una coppia
+     * Genera automaticamente un nuovo duello Showdown ogni settimana, selezionando una coppia
      * di libri disponibili tramite il metodo {@link #selezionaCoppiaLibri()}.
      * <p>
      * Questo metodo è annotato con {@code @Scheduled} e viene invocato periodicamente dal framework
-     * ogni ora (intervallo di 3.600.000 millisecondi). Se la selezione non restituisce esattamente
-     * due libri liberi (ad esempio in caso di carenza di risorse nel sistema), il metodo non compie alcuna azione.
+     * ogni sette giorni. Se la selezione non restituisce esattamente due libri liberi
+     * (ad esempio in caso di carenza di risorse nel sistema), il metodo non compie alcuna azione.
      * </p>
      */
-    @Scheduled(fixedRate = 3600000)
+    @Scheduled(fixedRate = 7, timeUnit = TimeUnit.DAYS)
     public void generaShowdownAutomatico() {
         List<Libro> libri = selezionaCoppiaLibri();
         if (libri.size() == 2) {
             showdownRepository.save(new Showdown(libri.get(0), libri.get(1)));
+        }
+    }
+
+    /**
+     * Disattiva gli Showdown creati da più di una settimana.
+     * <p>
+     * Senza questa chiusura periodica gli Showdown resterebbero attivi
+     * indefinitamente, esaurendo i libri disponibili per le nuove sfide.
+     */
+    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.DAYS)
+    public void chiudiShowdownScaduti() {
+        LocalDateTime limite = LocalDateTime.now().minusWeeks(1);
+        for (Showdown s : showdownRepository.findByAttivoTrue()) {
+            if (s.getDataCreazione().isBefore(limite)) {
+                s.setAttivo(false);
+                showdownRepository.save(s);
+            }
         }
     }
 

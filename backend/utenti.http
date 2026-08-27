@@ -27,8 +27,8 @@ POST http://localhost:8080/api/utenti/login
 Content-Type: application/json
 
 {
-  "username": "giada",
-  "password": "password123"
+  "username": "romibat27",
+  "password": "password"
 }
 
 ### Login Errato - Verifica dell'eccezione CredenzialiNonValide
@@ -39,3 +39,4 @@ Content-Type: application/json
   "username": "giada",
   "password": "passwordSbagliata"
 }
+
