@@ -6,6 +6,7 @@ import 'schermata_showdown.dart';
 import 'schermata_classifica.dart';
 import 'schermata_libreria.dart';
 import 'schermata_diario.dart';
+import 'schermata_recensioni.dart';
 
 void main() {
   runApp(const BookNestApp());
@@ -44,6 +45,7 @@ class _StatoSchermataPrincipale extends State<SchermataPrincipale> {
     SchermataClassifica(),
     SchermataLibreria(),
     SchermataDiario(),
+    SchermataRecensioni(),
   ];
 
   @override
@@ -60,6 +62,7 @@ class _StatoSchermataPrincipale extends State<SchermataPrincipale> {
           BottomNavigationBarItem(icon: Icon(Icons.leaderboard), label: 'Classifica'),
           BottomNavigationBarItem(icon: Icon(Icons.library_books), label: 'Libreria'),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Diario'),
+          BottomNavigationBarItem(icon: Icon(Icons.rate_review), label: 'Recensioni'),
         ],
       ),
     );

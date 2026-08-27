@@ -132,7 +132,8 @@ public class RecensioneService {
 
         recensione.setTesto(testo);
         recensione.setPubblica(pubblica);
+        recensioneRepository.save(recensione);
 
-        return recensioneRepository.save(recensione);
+        return recensione;
     }
 }

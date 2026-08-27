@@ -9,6 +9,7 @@ import it.polimi.booknest.model.Libro;
 import it.polimi.booknest.model.Recensione;
 import it.polimi.booknest.model.Utente;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Repository JPA per la gestione e la persistenza delle entità {@link Recensione}.
@@ -16,21 +17,25 @@ import org.springframework.data.jpa.repository.Query;
 public interface RecensioneRepository extends JpaRepository<Recensione, Long> {
 
     /**
-     * Trova tutte le recensioni pubbliche associate a uno specifico libro (utilizzato dai visitatori).
+     * Trova tutte le recensioni pubbliche associate a uno specifico libro (utilizzato dai visitatori),
+     * caricando esplicitamente anche il libro e l'utente associati tramite {@code JOIN FETCH}.
      *
      * @param libro il libro di cui cercare le recensioni
-     * @return una lista di recensioni pubbliche
+     * @return una lista di recensioni pubbliche con relazioni risolte
      */
-    List<Recensione> findByLibroAndPubblicaTrue(Libro libro);
+    @Query("SELECT r FROM Recensione r JOIN FETCH r.libro JOIN FETCH r.utente WHERE r.libro = :libro AND r.pubblica = true")
+    List<Recensione> findByLibroAndPubblicaTrue(@Param("libro") Libro libro);
 
     /**
-     * Trova una specifica recensione scritta da un determinato utente per un determinato libro.
+     * Trova una specifica recensione scritta da un determinato utente per un determinato libro,
+     * caricando esplicitamente anche il libro e l'utente associati tramite {@code JOIN FETCH}.
      *
      * @param utente l'utente autore della recensione
      * @param libro  il libro recensito
      * @return un {@link Optional} contenente la recensione se esiste
      */
-    Optional<Recensione> findByUtenteAndLibro(Utente utente, Libro libro);
+    @Query("SELECT r FROM Recensione r JOIN FETCH r.libro JOIN FETCH r.utente WHERE r.utente = :utente AND r.libro = :libro")
+    Optional<Recensione> findByUtenteAndLibro(@Param("utente") Utente utente, @Param("libro") Libro libro);
 
     /**
      * Verifica se esiste già una recensione scritta da un determinato utente per un determinato libro.
@@ -42,12 +47,15 @@ public interface RecensioneRepository extends JpaRepository<Recensione, Long> {
     boolean existsByUtenteAndLibro(Utente utente, Libro libro);
 
     /**
-     * Trova tutte le recensioni scritte da un determinato utente (le sue recensioni).
+     * Trova tutte le recensioni scritte da un determinato utente (le sue recensioni),
+     * caricando esplicitamente anche il libro e l'utente associati tramite {@code JOIN FETCH}
+     * per evitare problemi di lazy loading a sessione chiusa.
      *
      * @param utente l'utente di cui recuperare le recensioni
-     * @return una lista delle recensioni dell'utente
+     * @return una lista delle recensioni dell'utente con relazioni risolte
      */
-    List<Recensione> findByUtente(Utente utente);
+    @Query("SELECT r FROM Recensione r JOIN FETCH r.libro JOIN FETCH r.utente WHERE r.utente = :utente")
+    List<Recensione> findByUtente(@Param("utente") Utente utente);
 
     /**
      * Recupera l'elenco dei libri ordinati in base al numero di recensioni ricevute, in ordine decrescente.
