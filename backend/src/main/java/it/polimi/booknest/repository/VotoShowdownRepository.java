@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 /**
  * Repository per l'accesso e la gestione dei voti espressi nei sondaggi.
  */
-@Repository
+
 public interface VotoShowdownRepository extends JpaRepository<VotoShowdown, Long> {
 
     /**

@@ -17,6 +17,11 @@ public class LikeController {
 
     private final LikeService likeService;
 
+    /**
+     * Inizializza il controller con il servizio di gestione dei like.
+     *
+     * @param likeService il servizio {@link LikeService} utilizzato per la logica di business dei like
+     */
     public LikeController(LikeService likeService) {
         this.likeService = likeService;
     }

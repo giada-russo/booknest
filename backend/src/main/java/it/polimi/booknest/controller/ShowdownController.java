@@ -12,12 +12,21 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller REST per la gestione delle sfide tra libri (Showdown),
+ * inclusi il recupero degli eventi attivi, dei risultati e l'espressione dei voti.
+ */
 @RestController
 @RequestMapping("/api/showdown")
 public class ShowdownController {
 
     private final ShowdownService showdownService;
 
+    /**
+     * Inizializza il controller con il servizio di gestione delle sfide.
+     *
+     * @param showdownService il servizio {@link ShowdownService} utilizzato per la logica di business degli showdown
+     */
     public ShowdownController(ShowdownService showdownService) {
         this.showdownService = showdownService;
     }

@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Repository per l'accesso ai dati dell'entità Showdown.
  */
-@Repository
+
 public interface ShowdownRepository extends JpaRepository<Showdown, Long> {
 
     /**

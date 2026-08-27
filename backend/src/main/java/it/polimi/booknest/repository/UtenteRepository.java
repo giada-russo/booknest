@@ -13,7 +13,7 @@ import java.util.Optional;
  * interrogazioni derivate dal nome del metodo, utilizzate rispettivamente
  * dall'autenticazione e dal controllo di unicità in fase di registrazione.
  */
-@Repository
+
 public interface UtenteRepository extends JpaRepository<Utente, Long> {
 
      Optional<Utente> findByUsername(String username);

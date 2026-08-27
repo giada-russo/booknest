@@ -12,15 +12,30 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller REST per la gestione degli utenti, inclusi registrazione,
+ * autenticazione (login) e relazioni di follow tra utenti.
+ */
 @RestController
 @RequestMapping("/api/utenti")
 public class UtenteController {
     private final UtenteService utenteService;
 
+    /**
+     * Inizializza il controller con il servizio di gestione degli utenti.
+     *
+     * @param utenteService il servizio {@link UtenteService} utilizzato per la logica di business degli utenti
+     */
     public UtenteController(UtenteService utenteService) {
         this.utenteService = utenteService;
     }
 
+    /**
+     * Registra un nuovo utente nel sistema.
+     *
+     * @param richiesta il DTO contenente i dati di registrazione (nome, cognome, username, email, password)
+     * @return un {@link UtenteDTO} con i dati dell'utente appena registrato
+     */
     @PostMapping("/registrazione")
     public UtenteDTO registra(@RequestBody RegistrazioneRequest richiesta){
 
@@ -34,6 +49,12 @@ public class UtenteController {
         return new UtenteDTO(utente);
     }
 
+    /**
+     * Effettua l'autenticazione di un utente esistente.
+     *
+     * @param richiesta il DTO contenente le credenziali di accesso (username e password)
+     * @return un {@link UtenteDTO} con i dati dell'utente autenticato
+     */
     @PostMapping("/login")
     public UtenteDTO login(@RequestBody LoginRequest richiesta){
 
@@ -86,5 +107,4 @@ public class UtenteController {
                 .map(UtenteDTO::new)
                 .toList();
     }
-
 }
