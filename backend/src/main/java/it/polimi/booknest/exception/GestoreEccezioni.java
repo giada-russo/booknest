@@ -27,26 +27,6 @@ public class GestoreEccezioni {
     }
 
     /**
-     * Gestisce i conflitti con lo stato corrente della risorsa: duplicati e operazioni non consentite.
-     */
-    @ExceptionHandler({
-            EmailGiaEsistenteException.class,
-            LibroGiaCatalogatoException.class,
-            RecensioneGiaEsistenteException.class,
-            UsernameGiaEsistenteException.class,
-            VotoGiaEspressoException.class,
-            ShowdownNonAttivoException.class,
-            TransizioneNonValidaException.class,
-            RecensioneNonConsentitaException.class,
-            VotoNonConsentitoException.class,
-            GiaSeguitoException.class,
-            AutoFollowException.class
-    })
-    public ResponseEntity<String> gestisciConflitto(RuntimeException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-    }
-
-    /**
      * Scatta quando viene fornito un criterio o un parametro di input non valido.
      */
     @ExceptionHandler({
@@ -64,5 +44,26 @@ public class GestoreEccezioni {
     })
     public ResponseEntity<String> gestisciCredenzialiNonValide(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
+
+    /**
+     * Gestisce i conflitti con lo stato corrente della risorsa: duplicati e operazioni non consentite.
+     */
+    @ExceptionHandler({
+            EmailGiaEsistenteException.class,
+            LibroGiaCatalogatoException.class,
+            RecensioneGiaEsistenteException.class,
+            UsernameGiaEsistenteException.class,
+            VotoGiaEspressoException.class,
+            ShowdownNonAttivoException.class,
+            TransizioneNonValidaException.class,
+            RecensioneNonConsentitaException.class,
+            VotoNonConsentitoException.class,
+            GiaSeguitoException.class,
+            AutoFollowException.class,
+            LikeGiaEspressoException.class
+    })
+    public ResponseEntity<String> gestisciConflitto(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 }

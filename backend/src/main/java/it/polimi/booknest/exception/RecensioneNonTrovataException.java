@@ -2,7 +2,7 @@ package it.polimi.booknest.exception;
 
 /**
  * Eccezione sollevata quando si cerca una recensione associata a un determinato utente
- * e a un determinato libro, ma questa non viene trovata nel sistema.
+ * e a un determinato libro, o tramite identificativo, ma questa non viene trovata nel sistema.
  */
 public class RecensioneNonTrovataException extends RuntimeException {
 
@@ -14,5 +14,14 @@ public class RecensioneNonTrovataException extends RuntimeException {
      */
     public RecensioneNonTrovataException(Long utenteId, Long libroId) {
         super("Recensione non trovata per l'utente " + utenteId + " e il libro " + libroId);
+    }
+
+    /**
+     * Costruisce una nuova eccezione specificando l'identificativo della recensione non trovata.
+     *
+     * @param idRecensione l'identificativo della recensione non trovata
+     */
+    public RecensioneNonTrovataException(Long idRecensione) {
+        super("Nessuna recensione trovata con id: " + idRecensione);
     }
 }
