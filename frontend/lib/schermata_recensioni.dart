@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'recensione.dart';
 import 'catalogazione.dart';
 import 'schermata_showdown.dart';
+import 'sessione.dart';
 
 /// Mostra le recensioni scritte dall'utente e consente di scriverne di nuove.
 ///

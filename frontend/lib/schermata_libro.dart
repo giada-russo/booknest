@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'libro.dart';
 import 'recensione.dart';
 import 'schermata_showdown.dart';
+import 'sessione.dart';
 
 /// Scheda di dettaglio di un libro.
 ///

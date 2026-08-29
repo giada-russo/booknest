@@ -2,12 +2,15 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'libro.dart';
+import 'sessione.dart';
+import 'schermata_accesso.dart';
 import 'schermata_showdown.dart';
 import 'schermata_classifica.dart';
 import 'schermata_libreria.dart';
 import 'schermata_diario.dart';
 import 'schermata_recensioni.dart';
 import 'schermata_libro.dart';
+import 'schermata_utenti.dart';
 
 void main() {
   runApp(const BookNestApp());
@@ -18,9 +21,10 @@ class BookNestApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'BookNest',
-      home: const SchermataPrincipale(),
+      home: SchermataPrincipale(),
     );
   }
 }
@@ -39,32 +43,87 @@ class SchermataPrincipale extends StatefulWidget {
 class _StatoSchermataPrincipale extends State<SchermataPrincipale> {
   int indiceSezione = 0;
 
-  /// Le sezioni navigabili, nello stesso ordine delle voci della barra.
-  final List<Widget> sezioni = const [
+  /// Sezioni accessibili anche senza autenticazione.
+  static const List<Widget> sezioniPubbliche = [
     SchermataLibri(),
     SchermataShowdown(),
     SchermataClassifica(),
+  ];
+
+  /// Voci di navigazione corrispondenti alle sezioni pubbliche.
+  static const List<BottomNavigationBarItem> vociPubbliche = [
+    BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Catalogo'),
+    BottomNavigationBarItem(icon: Icon(Icons.how_to_vote), label: 'Showdown'),
+    BottomNavigationBarItem(icon: Icon(Icons.leaderboard), label: 'Classifica'),
+  ];
+
+  /// Sezioni riservate agli utenti autenticati.
+  static const List<Widget> sezioniRiservate = [
     SchermataLibreria(),
     SchermataDiario(),
     SchermataRecensioni(),
+    SchermataUtenti(),
   ];
+
+  /// Voci di navigazione corrispondenti alle sezioni riservate.
+  static const List<BottomNavigationBarItem> vociRiservate = [
+    BottomNavigationBarItem(icon: Icon(Icons.library_books), label: 'Libreria'),
+    BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Diario'),
+    BottomNavigationBarItem(icon: Icon(Icons.rate_review), label: 'Recensioni'),
+    BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Utenti'),
+  ];
+
+  /// Apre la schermata di accesso e aggiorna l'interfaccia al rientro.
+  void apriAccesso() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SchermataAccesso(
+          alAccessoRiuscito: () {
+            Navigator.pop(context);
+            setState(() {});
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Termina la sessione e riporta l'interfaccia allo stato di visitatore.
+  void esci() {
+    setState(() {
+      idUtenteCorrente = null;
+      usernameCorrente = null;
+      indiceSezione = 0;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final autenticato = idUtenteCorrente != null;
+    final sezioni = autenticato
+        ? [...sezioniPubbliche, ...sezioniRiservate]
+        : sezioniPubbliche;
+    final voci = autenticato
+        ? [...vociPubbliche, ...vociRiservate]
+        : vociPubbliche;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('BookNest')),
+      appBar: AppBar(
+        title: Text(autenticato ? 'BookNest — $usernameCorrente' : 'BookNest'),
+        actions: [
+          IconButton(
+            icon: Icon(autenticato ? Icons.logout : Icons.login),
+            tooltip: autenticato ? 'Esci' : 'Accedi',
+            onPressed: autenticato ? esci : apriAccesso,
+          ),
+        ],
+      ),
       body: sezioni[indiceSezione],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: indiceSezione,
         onTap: (indice) => setState(() => indiceSezione = indice),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Catalogo'),
-          BottomNavigationBarItem(icon: Icon(Icons.how_to_vote), label: 'Showdown'),
-          BottomNavigationBarItem(icon: Icon(Icons.leaderboard), label: 'Classifica'),
-          BottomNavigationBarItem(icon: Icon(Icons.library_books), label: 'Libreria'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Diario'),
-          BottomNavigationBarItem(icon: Icon(Icons.rate_review), label: 'Recensioni'),
-        ],
+        type: BottomNavigationBarType.fixed,
+        items: voci,
       ),
     );
   }
@@ -124,13 +183,16 @@ class _StatoSchermataLibri extends State<SchermataLibri> {
       itemBuilder: (context, i) => ListTile(
         title: Text(libri[i].titolo),
         subtitle: Text(libri[i].autore),
+        trailing: libri[i].votoMedio == null
+            ? const Text('—')
+            : Text('★ ${libri[i].votoMedio!.toStringAsFixed(1)}'),
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => SchermataLibro(libro: libri[i]),
           ),
         ),
-      )
+      ),
     );
   }
 }

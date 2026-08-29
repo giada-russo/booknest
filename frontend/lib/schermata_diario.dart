@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'catalogazione.dart';
 import 'schermata_showdown.dart';
+import 'sessione.dart';
 
 /// Mostra il diario di lettura dell'utente: le letture completate,
 /// ordinate dalla più recente.

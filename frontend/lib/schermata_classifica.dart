@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:frontend/schermata_libro.dart';
 import 'package:http/http.dart' as http;
 import 'libro.dart';
 
@@ -96,6 +97,12 @@ class _StatoSchermataClassifica extends State<SchermataClassifica> {
               : ListView.builder(
             itemCount: libri.length,
             itemBuilder: (context, i) => ListTile(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SchermataLibro(libro: libri[i]),
+                ),
+              ),
               leading: Text('${i + 1}'),
               title: Text(libri[i].titolo),
               subtitle: Text(libri[i].autore),

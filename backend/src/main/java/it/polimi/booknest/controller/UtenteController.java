@@ -3,6 +3,7 @@ package it.polimi.booknest.controller;
 import it.polimi.booknest.dto.LoginRequest;
 import it.polimi.booknest.dto.RegistrazioneRequest;
 import it.polimi.booknest.dto.UtenteDTO;
+import it.polimi.booknest.dto.UtenteRidottoDTO;
 import it.polimi.booknest.exception.AutoFollowException;
 import it.polimi.booknest.exception.GiaSeguitoException;
 import it.polimi.booknest.exception.UtenteNonTrovatoException;
@@ -97,14 +98,32 @@ public class UtenteController {
      * Restituisce gli utenti seguiti dall'utente autenticato.
      *
      * @param utenteId l'identificativo dell'utente, dall'header HTTP
-     * @return la lista degli {@link UtenteDTO} seguiti
+     * @return la lista degli {@link UtenteRidottoDTO} seguiti
      * @throws UtenteNonTrovatoException se l'utente non esiste
      */
     @GetMapping("/seguiti")
-    public List<UtenteDTO> trovaSeguiti(@RequestHeader("X-Utente-Id") Long utenteId) {
+    public List<UtenteRidottoDTO> trovaSeguiti(@RequestHeader("X-Utente-Id") Long utenteId) {
         return utenteService.trovaSeguiti(utenteId)
                 .stream()
-                .map(UtenteDTO::new)
+                .map(UtenteRidottoDTO::new)
+                .toList();
+    }
+
+    /**
+     * Restituisce gli altri utenti registrati sulla piattaforma.
+     * <p>
+     * L'utente che effettua la richiesta è escluso dall'elenco, poiché
+     * non è consentito seguire se stessi.
+     *
+     * @param utenteId l'identificativo dell'utente, dall'header HTTP
+     * @return la lista degli {@link UtenteRidottoDTO} degli altri utenti
+     * @throws UtenteNonTrovatoException se l'utente non esiste
+     */
+    @GetMapping
+    public List<UtenteRidottoDTO> trovaAltriUtenti(@RequestHeader("X-Utente-Id") Long utenteId) {
+        return utenteService.trovaAltriUtenti(utenteId)
+                .stream()
+                .map(UtenteRidottoDTO::new)
                 .toList();
     }
 }

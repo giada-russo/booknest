@@ -6,6 +6,7 @@ import it.polimi.booknest.repository.UtenteRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -112,7 +113,8 @@ public class UtenteService {
             throw new AutoFollowException(idSeguace);
         }
 
-        Utente seguace = trovaPerId(idSeguace);
+        Utente seguace = utenteRepository.trovaConSeguiti(idSeguace)
+                .orElseThrow(() -> new UtenteNonTrovatoException(idSeguace));
         Utente seguito = trovaPerId(idSeguito);
 
         if (!seguace.getSeguiti().add(seguito)) {
@@ -133,7 +135,8 @@ public class UtenteService {
      * @throws UtenteNonTrovatoException se uno dei due utenti non esiste
      */
     public void smettiDiSeguire(Long idSeguace, Long idSeguito) {
-        Utente seguace = trovaPerId(idSeguace);
+        Utente seguace = utenteRepository.trovaConSeguiti(idSeguace)
+                .orElseThrow(() -> new UtenteNonTrovatoException(idSeguace));
         Utente seguito = trovaPerId(idSeguito);
         seguace.getSeguiti().remove(seguito);
         utenteRepository.save(seguace);
@@ -142,14 +145,35 @@ public class UtenteService {
     /**
      * Restituisce l'insieme degli utenti seguiti dall'utente specificato.
      * <p>
-     * Sfrutta il controllo preventivo tramite ID per assicurarsi che l'utente esista;
-     * in caso contrario, solleva un'eccezione anziché restituire un insieme vuoto.
+     * Sfrutta la query ottimizzata con JOIN FETCH per caricare contestualmente
+     * i seguiti ed evitare problemi di sessione chiusa.
      *
      * @param idUtente l'identificativo dell'utente di cui si vogliono conoscere i seguiti
      * @return un insieme di {@link Utente} seguiti
      * @throws UtenteNonTrovatoException se l'utente di riferimento non esiste
      */
     public Set<Utente> trovaSeguiti(Long idUtente) {
-        return trovaPerId(idUtente).getSeguiti();
+        return utenteRepository.trovaConSeguiti(idUtente)
+                .orElseThrow(() -> new UtenteNonTrovatoException(idUtente))
+                .getSeguiti();
+    }
+
+    /**
+     * Restituisce tutti gli utenti registrati, escluso quello indicato.
+     * <p>
+     * Serve al client per mostrare le persone che è possibile seguire:
+     * l'utente stesso viene escluso perché il follow verso se stessi non è consentito.
+     *
+     * @param idUtente l'identificativo dell'utente da escludere
+     * @return la lista degli altri utenti registrati
+     * @throws UtenteNonTrovatoException se l'utente non esiste
+     */
+    public List<Utente> trovaAltriUtenti(Long idUtente) {
+        trovaPerId(idUtente);
+
+        return utenteRepository.findAll()
+                .stream()
+                .filter(u -> !u.getId().equals(idUtente))
+                .toList();
     }
 }

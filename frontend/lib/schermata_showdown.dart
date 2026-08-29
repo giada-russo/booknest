@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'showdown.dart';
-
-const int idUtenteCorrente = 1;  // provvisorio: in attesa della schermata di login
+import 'sessione.dart';
 
 class SchermataShowdown extends StatefulWidget {
   const SchermataShowdown({super.key});

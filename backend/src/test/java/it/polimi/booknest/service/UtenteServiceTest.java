@@ -10,7 +10,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -173,7 +175,7 @@ class UtenteServiceTest {
         // Arrange
         Utente seguace = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
         Utente seguito = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
-        when(utenteRepository.findById(1L)).thenReturn(Optional.of(seguace));
+        when(utenteRepository.trovaConSeguiti(1L)).thenReturn(Optional.of(seguace));
         when(utenteRepository.findById(2L)).thenReturn(Optional.of(seguito));
 
         // Act
@@ -196,7 +198,7 @@ class UtenteServiceTest {
         Utente seguito = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
         seguace.getSeguiti().add(seguito);
 
-        when(utenteRepository.findById(1L)).thenReturn(Optional.of(seguace));
+        when(utenteRepository.trovaConSeguiti(1L)).thenReturn(Optional.of(seguace));
         when(utenteRepository.findById(2L)).thenReturn(Optional.of(seguito));
 
         assertThrows(GiaSeguitoException.class, () -> utenteService.segui(1L, 2L));
@@ -209,7 +211,7 @@ class UtenteServiceTest {
         Utente seguito = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
         seguace.getSeguiti().add(seguito);
 
-        when(utenteRepository.findById(1L)).thenReturn(Optional.of(seguace));
+        when(utenteRepository.trovaConSeguiti(1L)).thenReturn(Optional.of(seguace));
         when(utenteRepository.findById(2L)).thenReturn(Optional.of(seguito));
 
         // Act
@@ -227,7 +229,7 @@ class UtenteServiceTest {
         Utente seguito = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
         seguace.getSeguiti().add(seguito);
 
-        when(utenteRepository.findById(1L)).thenReturn(Optional.of(seguace));
+        when(utenteRepository.trovaConSeguiti(1L)).thenReturn(Optional.of(seguace));
 
         // Act
         Set<Utente> risultato = utenteService.trovaSeguiti(1L);
@@ -235,5 +237,43 @@ class UtenteServiceTest {
         // Assert
         assertEquals(1, risultato.size());
         assertTrue(risultato.contains(seguito));
+    }
+
+    @Test
+    void trovaAltriUtentiEscludeLUtenteRichiedente() {
+        // Arrange
+        Utente romina = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Utente marco = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
+        ReflectionTestUtils.setField(romina, "id", 1L);
+        ReflectionTestUtils.setField(marco, "id", 2L);
+
+        when(utenteRepository.findById(1L)).thenReturn(Optional.of(romina));
+        when(utenteRepository.findAll()).thenReturn(List.of(romina, marco));
+
+        // Act
+        List<Utente> risultato = utenteService.trovaAltriUtenti(1L);
+
+        // Assert
+        assertEquals(1, risultato.size());
+        assertEquals("marcoros", risultato.get(0).getUsername());
+    }
+
+    @Test
+    void seguireDaUtenteInesistenteSollevaEccezione() {
+        // Arrange
+        when(utenteRepository.trovaConSeguiti(99L)).thenReturn(Optional.empty());
+
+        // Act + Assert
+        assertThrows(UtenteNonTrovatoException.class, () -> utenteService.segui(99L, 2L));
+    }
+
+    @Test
+    void smettereDiSeguireDaUtenteInesistenteSollevaEccezione() {
+        // Arrange
+        when(utenteRepository.trovaConSeguiti(99L)).thenReturn(Optional.empty());
+
+        // Act + Assert
+        assertThrows(UtenteNonTrovatoException.class,
+                () -> utenteService.smettiDiSeguire(99L, 2L));
     }
 }
