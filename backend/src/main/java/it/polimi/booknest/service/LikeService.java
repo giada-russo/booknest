@@ -158,4 +158,38 @@ public class LikeService {
                 .orElseThrow(() -> new RecensioneNonTrovataException(idRecensione));
         return likeRecensioneRepository.countByRecensione(recensione);
     }
+
+    /**
+     * Verifica se l'utente ha già espresso un apprezzamento per il libro.
+     *
+     * @param idUtente l'identificativo dell'utente
+     * @param idLibro  l'identificativo del libro
+     * @return {@code true} se il like è già stato espresso
+     * @throws UtenteNonTrovatoException se l'utente non esiste
+     * @throws LibroNonTrovatoException  se il libro non esiste
+     */
+    public boolean haMessoLikeLibro(Long idUtente, Long idLibro) {
+        Utente utente = utenteService.trovaPerId(idUtente);
+        Libro libro = libroRepository.findById(idLibro)
+                .orElseThrow(() -> new LibroNonTrovatoException(idLibro));
+
+        return likeLibroRepository.existsByUtenteAndLibro(utente, libro);
+    }
+
+    /**
+     * Verifica se l'utente ha già espresso un apprezzamento per la recensione.
+     *
+     * @param idUtente     l'identificativo dell'utente
+     * @param idRecensione l'identificativo della recensione
+     * @return {@code true} se il like è già stato espresso
+     * @throws UtenteNonTrovatoException     se l'utente non esiste
+     * @throws RecensioneNonTrovataException se la recensione non esiste
+     */
+    public boolean haMessoLikeRecensione(Long idUtente, Long idRecensione) {
+        Utente utente = utenteService.trovaPerId(idUtente);
+        Recensione recensione = recensioneRepository.findById(idRecensione)
+                .orElseThrow(() -> new RecensioneNonTrovataException(idRecensione));
+
+        return likeRecensioneRepository.existsByUtenteAndRecensione(utente, recensione);
+    }
 }

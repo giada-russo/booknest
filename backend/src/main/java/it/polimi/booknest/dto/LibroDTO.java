@@ -6,7 +6,7 @@ import it.polimi.booknest.model.Libro;
  * Data Transfer Object (DTO) che rappresenta i dati essenziali di un libro
  * destinati al trasferimento verso il client (es. per la visualizzazione nelle classifiche).
  *
- * <p>Contiene le informazioni principali quali identificativo, titolo e autore,
+ * <p>Contiene le informazioni principali quali identificativo, titolo, autore, ISBN
  * e opzionalmente la media dei voti ricevuti dagli utenti.
  */
 public class LibroDTO {
@@ -14,6 +14,7 @@ public class LibroDTO {
     private Long id;
     private String titolo;
     private String autore;
+    private String isbn;
     private Double votoMedio;
 
     /**
@@ -27,6 +28,7 @@ public class LibroDTO {
         this.id = libro.getId();
         this.titolo = libro.getTitolo();
         this.autore = libro.getAutore();
+        this.isbn = libro.getIsbn();
     }
 
     /**
@@ -50,6 +52,10 @@ public class LibroDTO {
 
     public String getAutore() {
         return autore;
+    }
+
+    public String getIsbn() {
+        return isbn;
     }
 
     public Double getVotoMedio() {

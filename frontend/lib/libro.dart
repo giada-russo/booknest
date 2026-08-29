@@ -6,12 +6,14 @@ class Libro {
   final int id;
   final String titolo;
   final String autore;
+  final String isbn;
   final double? votoMedio;
 
   Libro({
     required this.id,
     required this.titolo,
     required this.autore,
+    required this.isbn,
     this.votoMedio,
   });
 
@@ -23,6 +25,7 @@ class Libro {
       id: json['id'],
       titolo: json['titolo'],
       autore: json['autore'],
+      isbn: json['isbn'],
       votoMedio: (json['votoMedio'] as num?)?.toDouble(),
     );
   }

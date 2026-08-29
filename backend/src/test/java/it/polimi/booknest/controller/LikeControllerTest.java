@@ -7,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -80,5 +80,31 @@ class LikeControllerTest {
         // Assert
         assertEquals(5L, risultato);
         verify(likeService).contaLikeRecensione(10L);
+    }
+
+    @Test
+    void haMessoLikeLibroDelegaAlService() {
+        // Arrange
+        when(likeService.haMessoLikeLibro(1L, 5L)).thenReturn(true);
+
+        // Act
+        boolean risultato = likeController.haMessoLikeLibro(1L, 5L);
+
+        // Assert
+        assertTrue(risultato);
+        verify(likeService).haMessoLikeLibro(1L, 5L);
+    }
+
+    @Test
+    void haMessoLikeRecensioneDelegaAlService() {
+        // Arrange
+        when(likeService.haMessoLikeRecensione(1L, 10L)).thenReturn(false);
+
+        // Act
+        boolean risultato = likeController.haMessoLikeRecensione(1L, 10L);
+
+        // Assert
+        assertFalse(risultato);
+        verify(likeService).haMessoLikeRecensione(1L, 10L);
     }
 }

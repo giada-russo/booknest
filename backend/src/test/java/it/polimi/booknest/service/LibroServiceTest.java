@@ -1,7 +1,9 @@
 package it.polimi.booknest.service;
 
+import it.polimi.booknest.dto.LibroDTO;
 import it.polimi.booknest.exception.LibroNonTrovatoException;
 import it.polimi.booknest.model.Libro;
+import it.polimi.booknest.repository.CatalogazioneRepository;
 import it.polimi.booknest.repository.LibroRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +23,9 @@ class LibroServiceTest {
 
     @Mock
     private LibroRepository libroRepository;
+
+    @Mock
+    private CatalogazioneRepository catalogazioneRepository;
 
     @InjectMocks
     private LibroService libroService;
@@ -48,5 +53,30 @@ class LibroServiceTest {
         // Act + Assert
         assertThrows(LibroNonTrovatoException.class,
                 () -> libroService.trovaLibriSimili(999L));
+    }
+
+    @Test
+    void trovaTuttiConVotoMedioRestituisceILibriConLaMedia() {
+        Libro libro = new Libro("Circe", "Madeline Miller", "9788823522271");
+        when(libroRepository.findAll()).thenReturn(List.of(libro));
+        when(catalogazioneRepository.calcolaVotoMedio(libro)).thenReturn(4.5);
+
+        List<LibroDTO> risultato = libroService.trovaTuttiConVotoMedio();
+
+        assertEquals(1, risultato.size());
+        assertEquals(4.5, risultato.get(0).getVotoMedio());
+    }
+
+    @Test
+    void trovaLibriSimiliRestituisceISuggerimenti() {
+        Libro libro = new Libro("Circe", "Madeline Miller", "9788823522271");
+        Libro simile = new Libro("Tata", "Valerie Perrin", "9788833571039");
+        when(libroRepository.findById(1L)).thenReturn(Optional.of(libro));
+        when(catalogazioneRepository.trovaLibriSimili(libro)).thenReturn(List.of(simile));
+
+        List<LibroDTO> risultato = libroService.trovaLibriSimili(1L);
+
+        assertEquals(1, risultato.size());
+        assertEquals("Tata", risultato.get(0).getTitolo());
     }
 }

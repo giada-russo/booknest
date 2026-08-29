@@ -1,6 +1,8 @@
 package it.polimi.booknest.service;
 
+import it.polimi.booknest.exception.LibroNonTrovatoException;
 import it.polimi.booknest.exception.LikeGiaEspressoException;
+import it.polimi.booknest.exception.RecensioneNonTrovataException;
 import it.polimi.booknest.model.Libro;
 import it.polimi.booknest.model.LikeLibro;
 import it.polimi.booknest.model.LikeRecensione;
@@ -143,5 +145,88 @@ class LikeServiceTest {
 
         // Assert
         assertEquals(5L, conteggio);
+    }
+
+    @Test
+    void metteLikeSuLibroInesistenteSollevaEccezione() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(LibroNonTrovatoException.class,
+                () -> likeService.metteLikeLibro(1L, 99L));
+    }
+
+    @Test
+    void metteLikeSuRecensioneInesistenteSollevaEccezione() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(recensioneRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RecensioneNonTrovataException.class,
+                () -> likeService.metteLikeRecensione(1L, 99L));
+    }
+
+    @Test
+    void metteLikeRecensioneDuplicatoSollevaEccezione() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Circe", "Madeline Miller", "9788823522271");
+        Recensione recensione = new Recensione(utente, libro, "Bellissimo", true);
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(recensioneRepository.findById(10L)).thenReturn(Optional.of(recensione));
+        when(likeRecensioneRepository.existsByUtenteAndRecensione(utente, recensione)).thenReturn(true);
+
+        assertThrows(LikeGiaEspressoException.class,
+                () -> likeService.metteLikeRecensione(1L, 10L));
+    }
+
+    @Test
+    void togliLikeRecensioneRimuoveIlLike() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Circe", "Madeline Miller", "9788823522271");
+        Recensione recensione = new Recensione(utente, libro, "Bellissimo", true);
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(recensioneRepository.findById(10L)).thenReturn(Optional.of(recensione));
+
+        likeService.togliLikeRecensione(1L, 10L);
+
+        verify(likeRecensioneRepository).deleteByUtenteAndRecensione(utente, recensione);
+    }
+
+    @Test
+    void haMessoLikeLibroRestituisceVeroSeIlLikeEsiste() {
+        // Arrange
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Circe", "Madeline Miller", "9788823522271");
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(5L)).thenReturn(Optional.of(libro));
+        when(likeLibroRepository.existsByUtenteAndLibro(utente, libro)).thenReturn(true);
+
+        // Act
+        boolean risultato = likeService.haMessoLikeLibro(1L, 5L);
+
+        // Assert
+        assertTrue(risultato);
+    }
+
+    @Test
+    void haMessoLikeRecensioneRestituisceFalsoSeIlLikeNonEsiste() {
+        // Arrange
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Circe", "Madeline Miller", "9788823522271");
+        Recensione recensione = new Recensione(utente, libro, "Bellissimo", true);
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(recensioneRepository.findById(10L)).thenReturn(Optional.of(recensione));
+        when(likeRecensioneRepository.existsByUtenteAndRecensione(utente, recensione)).thenReturn(false);
+
+        // Act
+        boolean risultato = likeService.haMessoLikeRecensione(1L, 10L);
+
+        // Assert
+        assertFalse(risultato);
     }
 }

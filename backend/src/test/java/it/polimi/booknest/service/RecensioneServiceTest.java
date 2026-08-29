@@ -6,6 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 import it.polimi.booknest.exception.LibroNonTrovatoException;
@@ -187,5 +188,31 @@ class RecensioneServiceTest {
 
         assertThrows(RecensioneNonTrovataException.class,
                 () -> recensioneService.modifica(1L, 5L, "Rivisto", true));
+    }
+
+    @Test
+    void trovaPubblichePerLibroRestituisceLeRecensioni() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Circe", "Madeline Miller", "9788823522271");
+        Recensione r = new Recensione(utente, libro, "Bellissimo", true);
+        when(libroRepository.findById(5L)).thenReturn(Optional.of(libro));
+        when(recensioneRepository.findByLibroAndPubblicaTrue(libro)).thenReturn(List.of(r));
+
+        List<Recensione> risultato = recensioneService.trovaPubblichePerLibro(5L);
+
+        assertEquals(1, risultato.size());
+    }
+
+    @Test
+    void trovaMieRecensioniRestituisceLeRecensioniDellUtente() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Circe", "Madeline Miller", "9788823522271");
+        Recensione r = new Recensione(utente, libro, "Bellissimo", true);
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(recensioneRepository.findByUtente(utente)).thenReturn(List.of(r));
+
+        List<Recensione> risultato = recensioneService.trovaMieRecensioni(1L);
+
+        assertEquals(1, risultato.size());
     }
 }

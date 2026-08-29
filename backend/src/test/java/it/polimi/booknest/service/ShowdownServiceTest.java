@@ -14,19 +14,26 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class ShowdownServiceTest {
+class ShowdownServiceTest {
 
     @Mock
     private ShowdownRepository showdownRepository;
@@ -85,5 +92,50 @@ public class ShowdownServiceTest {
         assertEquals(NUMERO_THREAD, risultato.getConteggioA());
         assertEquals(0, risultato.getConteggioB());
 
+    }
+
+    @Test
+    void chiudiShowdownScadutiDisattivaSoloQuelliVecchi() {
+        // Arrange
+        Libro libroA = new Libro("Circe", "Madeline Miller", "9788823522271");
+        Libro libroB = new Libro("Tata", "Valerie Perrin", "9788833571039");
+        Showdown vecchio = new Showdown(libroA, libroB);
+        ReflectionTestUtils.setField(vecchio, "dataCreazione", LocalDateTime.now().minusWeeks(2));
+        Showdown recente = new Showdown(libroB, libroA);
+        when(showdownRepository.findByAttivoTrue()).thenReturn(List.of(vecchio, recente));
+        // Act
+        showdownService.chiudiShowdownScaduti();
+        // Assert
+        assertFalse(vecchio.isAttivo());
+        assertTrue(recente.isAttivo());
+        verify(showdownRepository).save(vecchio);
+        verify(showdownRepository, never()).save(recente);
+    }
+
+    @Test
+    void generaShowdownAutomaticoCreaUnaSfidaTraILibriPiuCatalogati() {
+        // Arrange
+        Libro primo = new Libro("Circe", "Madeline Miller", "9788823522271");
+        Libro secondo = new Libro("Tata", "Valerie Perrin", "9788833571039");
+        when(showdownRepository.findByAttivoTrue()).thenReturn(List.of());
+        when(catalogazioneRepository.trovaLibriPiuCatalogati()).thenReturn(List.of(primo, secondo));
+        // Act
+        showdownService.generaShowdownAutomatico();
+        // Assert
+        verify(showdownRepository).save(any(Showdown.class));
+    }
+
+    @Test
+    void generaShowdownUsaIlCatalogoQuandoIPiuCatalogatiNonBastano() {
+        // Arrange
+        Libro primo = new Libro("Circe", "Madeline Miller", "9788823522271");
+        Libro secondo = new Libro("Tata", "Valerie Perrin", "9788833571039");
+        when(showdownRepository.findByAttivoTrue()).thenReturn(List.of());
+        when(catalogazioneRepository.trovaLibriPiuCatalogati()).thenReturn(List.of(primo));
+        when(libroRepository.findAll()).thenReturn(List.of(primo, secondo));
+        // Act
+        showdownService.generaShowdownAutomatico();
+        // Assert
+        verify(showdownRepository).save(any(Showdown.class));
     }
 }

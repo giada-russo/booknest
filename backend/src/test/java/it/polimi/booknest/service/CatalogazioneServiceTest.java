@@ -1,8 +1,6 @@
 package it.polimi.booknest.service;
 
-import it.polimi.booknest.exception.LibroGiaCatalogatoException;
-import it.polimi.booknest.exception.TransizioneNonValidaException;
-import it.polimi.booknest.exception.VotoNonConsentitoException;
+import it.polimi.booknest.exception.*;
 import it.polimi.booknest.model.Catalogazione;
 import it.polimi.booknest.model.Libro;
 import it.polimi.booknest.model.StatoLettura;
@@ -207,5 +205,69 @@ class CatalogazioneServiceTest {
         // Act + Assert
         assertThrows(VotoNonConsentitoException.class,
                 () -> catalogazioneService.assegnaVoto(1L, 5L, 4));
+    }
+
+    @Test
+    void cambiaStatoConLibroInesistenteSollevaEccezione() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(LibroNonTrovatoException.class,
+                () -> catalogazioneService.cambiaStato(1L, 99L, StatoLettura.LETTO));
+    }
+
+    @Test
+    void cambiaStatoSenzaCatalogazioneSollevaEccezione() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Circe", "Madeline Miller", "9788823522271");
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(5L)).thenReturn(Optional.of(libro));
+        when(catalogazioneRepository.findByUtenteAndLibro(utente, libro)).thenReturn(Optional.empty());
+
+        assertThrows(CatalogazioneNonTrovataException.class,
+                () -> catalogazioneService.cambiaStato(1L, 5L, StatoLettura.LETTO));
+    }
+
+    @Test
+    void catalogaConLibroInesistenteSollevaEccezione() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(LibroNonTrovatoException.class,
+                () -> catalogazioneService.cataloga(1L, 99L));
+    }
+
+    @Test
+    void assegnaVotoFuoriIntervalloSollevaEccezione() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Circe", "Madeline Miller", "9788823522271");
+        Catalogazione c = new Catalogazione(utente, libro);
+        c.cambiaStato(StatoLettura.LETTO);
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(5L)).thenReturn(Optional.of(libro));
+        when(catalogazioneRepository.findByUtenteAndLibro(utente, libro)).thenReturn(Optional.of(c));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> catalogazioneService.assegnaVoto(1L, 5L, 7));
+    }
+
+    @Test
+    void assegnaVotoSuLibroLettoFunziona() {
+        Utente utente = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
+        Libro libro = new Libro("Circe", "Madeline Miller", "9788823522271");
+        Catalogazione c = new Catalogazione(utente, libro);
+        c.cambiaStato(StatoLettura.LETTO);
+
+        when(utenteService.trovaPerId(1L)).thenReturn(utente);
+        when(libroRepository.findById(5L)).thenReturn(Optional.of(libro));
+        when(catalogazioneRepository.findByUtenteAndLibro(utente, libro)).thenReturn(Optional.of(c));
+
+        Catalogazione risultato = catalogazioneService.assegnaVoto(1L, 5L, 4);
+
+        assertEquals(4, risultato.getVoto());
+        verify(catalogazioneRepository).save(c);
     }
 }

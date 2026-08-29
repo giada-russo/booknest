@@ -7,6 +7,7 @@ import 'schermata_classifica.dart';
 import 'schermata_libreria.dart';
 import 'schermata_diario.dart';
 import 'schermata_recensioni.dart';
+import 'schermata_libro.dart';
 
 void main() {
   runApp(const BookNestApp());
@@ -123,10 +124,13 @@ class _StatoSchermataLibri extends State<SchermataLibri> {
       itemBuilder: (context, i) => ListTile(
         title: Text(libri[i].titolo),
         subtitle: Text(libri[i].autore),
-        trailing: libri[i].votoMedio == null
-            ? const Text('—')
-            : Text('★ ${libri[i].votoMedio!.toStringAsFixed(1)}'),
-      ),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SchermataLibro(libro: libri[i]),
+          ),
+        ),
+      )
     );
   }
 }

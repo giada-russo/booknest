@@ -111,4 +111,34 @@ public class LikeController {
     public long contaLikeRecensione(@PathVariable Long idRecensione) {
         return likeService.contaLikeRecensione(idRecensione);
     }
+
+    /**
+     * Indica se l'utente autenticato ha già espresso un apprezzamento per il libro.
+     *
+     * @param utenteId l'identificativo dell'utente ricavato dall'header della richiesta
+     * @param idLibro  l'identificativo del libro
+     * @return {@code true} se il like è già stato espresso
+     * @throws UtenteNonTrovatoException se l'utente non esiste
+     * @throws LibroNonTrovatoException  se il libro non esiste
+     */
+    @GetMapping("/libri/{idLibro}/mio")
+    public boolean haMessoLikeLibro(@RequestHeader("X-Utente-Id") Long utenteId,
+                                    @PathVariable Long idLibro) {
+        return likeService.haMessoLikeLibro(utenteId, idLibro);
+    }
+
+    /**
+     * Indica se l'utente autenticato ha già espresso un apprezzamento per la recensione.
+     *
+     * @param utenteId     l'identificativo dell'utente ricavato dall'header della richiesta
+     * @param idRecensione l'identificativo della recensione
+     * @return {@code true} se il like è già stato espresso
+     * @throws UtenteNonTrovatoException     se l'utente non esiste
+     * @throws RecensioneNonTrovataException se la recensione non esiste
+     */
+    @GetMapping("/recensioni/{idRecensione}/mio")
+    public boolean haMessoLikeRecensione(@RequestHeader("X-Utente-Id") Long utenteId,
+                                         @PathVariable Long idRecensione) {
+        return likeService.haMessoLikeRecensione(utenteId, idRecensione);
+    }
 }
