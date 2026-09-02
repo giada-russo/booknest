@@ -108,22 +108,4 @@ public class UtenteController {
                 .map(UtenteRidottoDTO::new)
                 .toList();
     }
-
-    /**
-     * Restituisce gli altri utenti registrati sulla piattaforma.
-     * <p>
-     * L'utente che effettua la richiesta è escluso dall'elenco, poiché
-     * non è consentito seguire se stessi.
-     *
-     * @param utenteId l'identificativo dell'utente, dall'header HTTP
-     * @return la lista degli {@link UtenteRidottoDTO} degli altri utenti
-     * @throws UtenteNonTrovatoException se l'utente non esiste
-     */
-    @GetMapping
-    public List<UtenteRidottoDTO> trovaAltriUtenti(@RequestHeader("X-Utente-Id") Long utenteId) {
-        return utenteService.trovaAltriUtenti(utenteId)
-                .stream()
-                .map(UtenteRidottoDTO::new)
-                .toList();
-    }
 }

@@ -22,6 +22,7 @@ class SchermataLibro extends StatefulWidget {
 class _StatoSchermataLibro extends State<SchermataLibro> {
   int conteggioLike = 0;
   bool likeMesso = false;
+  bool inCatalogazione = false;
   List<Recensione> recensioni = [];
   List<Libro> simili = [];
   Map<int, int> conteggiLikeRecensioni = {};
@@ -50,6 +51,7 @@ class _StatoSchermataLibro extends State<SchermataLibro> {
 
   /// Chiede al backend se l'utente ha già espresso un apprezzamento su questo libro.
   Future<void> caricaStatoLike() async {
+    if (idUtenteCorrente == null) return;
     try {
       final risposta = await http.get(
         Uri.parse('http://localhost:8080/api/like/libri/${widget.libro.id}/mio'),
@@ -81,6 +83,7 @@ class _StatoSchermataLibro extends State<SchermataLibro> {
 
   /// Carica conteggio e stato del like per ciascuna recensione mostrata.
   Future<void> caricaLikeRecensioni() async {
+    if (idUtenteCorrente == null) return;
     for (final r in recensioni) {
       try {
         final conteggio = await http.get(
@@ -144,6 +147,40 @@ class _StatoSchermataLibro extends State<SchermataLibro> {
     }
   }
 
+  /// Aggiunge il libro alla libreria personale dell'utente.
+  ///
+  /// Il backend crea la catalogazione nello stato iniziale DA_LEGGERE.
+  Future<void> cataloga() async {
+    setState(() => inCatalogazione = true);
+    try {
+      final risposta = await http.post(
+        Uri.parse('http://localhost:8080/api/catalogazioni/${widget.libro.id}'),
+        headers: {'X-Utente-Id': '$idUtenteCorrente'},
+      );
+      if (!mounted) return;
+
+      String messaggio;
+      if (risposta.statusCode == 200) {
+        messaggio = 'Aggiunto alla tua libreria';
+      } else if (risposta.statusCode == 409) {
+        messaggio = 'Questo libro è già nella tua libreria';
+      } else {
+        messaggio = 'Non è stato possibile aggiungere il libro';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(messaggio)),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Errore di connessione')),
+        );
+      }
+    }
+    if (mounted) setState(() => inCatalogazione = false);
+  }
+
   /// Aggiunge o rimuove l'apprezzamento dell'utente su una recensione.
   Future<void> cambiaLikeRecensione(int idRecensione) async {
     final indirizzo =
@@ -161,6 +198,63 @@ class _StatoSchermataLibro extends State<SchermataLibro> {
           SnackBar(content: Text(risposta.body)),
         );
       }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Errore di connessione')),
+        );
+      }
+    }
+  }
+
+  /// Chiede conferma e avvia il follow verso l'autore della recensione.
+  void chiediDiSeguire(int idAutore, String username) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Seguire $username?'),
+        content: const Text(
+          'Vedrai questa persona tra gli utenti che segui.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annulla'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              segui(idAutore, username);
+            },
+            child: const Text('Segui'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Registra il follow verso l'autore indicato.
+  Future<void> segui(int idAutore, String username) async {
+    try {
+      final risposta = await http.post(
+        Uri.parse('http://localhost:8080/api/utenti/seguiti/$idAutore'),
+        headers: {'X-Utente-Id': '$idUtenteCorrente'},
+      );
+
+      if (!mounted) return;
+
+      String messaggio;
+      if (risposta.statusCode == 200) {
+        messaggio = 'Ora segui $username';
+      } else if (risposta.statusCode == 409) {
+        messaggio = 'Segui già questa persona';
+      } else {
+        messaggio = 'Non è stato possibile seguire questa persona';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(messaggio)),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -192,11 +286,31 @@ class _StatoSchermataLibro extends State<SchermataLibro> {
             children: [
               IconButton(
                 icon: Icon(likeMesso ? Icons.favorite : Icons.favorite_border),
-                onPressed: cambiaLike,
+                color: const Color(0xFF9B8AA6),
+                onPressed: idUtenteCorrente == null ? null : cambiaLike,
+                tooltip: idUtenteCorrente == null
+                    ? 'Accedi per mettere like'
+                    : null,
               ),
               Text('$conteggioLike'),
             ],
           ),
+          if (idUtenteCorrente != null) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF9B8AA6),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                icon: const Icon(Icons.bookmark_add),
+                label: const Text('Aggiungi alla mia libreria'),
+                onPressed: inCatalogazione ? null : cataloga,
+              ),
+            ),
+          ],
           const Divider(height: 32),
           Text('Recensioni', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
@@ -211,12 +325,18 @@ class _StatoSchermataLibro extends State<SchermataLibro> {
               return ListTile(
                 title: Text(r.testo),
                 subtitle: Text('di ${r.usernameAutore}'),
+                onTap: idUtenteCorrente == null
+                    ? null
+                    : () => chiediDiSeguire(r.idAutore, r.usernameAutore),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
                       icon: Icon(giaMesso ? Icons.favorite : Icons.favorite_border),
-                      onPressed: () => cambiaLikeRecensione(idRecensione),
+                      color: const Color(0xFF9B8AA6),
+                      onPressed: idUtenteCorrente == null
+                          ? null
+                          : () => cambiaLikeRecensione(idRecensione),
                     ),
                     Text('$conteggio'),
                   ],

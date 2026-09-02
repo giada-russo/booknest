@@ -4,6 +4,7 @@ class Recensione {
   final String testo;
   final bool pubblica;
   final String usernameAutore;
+  final int idAutore;
   final String titoloLibro;
 
   Recensione({
@@ -11,6 +12,7 @@ class Recensione {
     required this.testo,
     required this.pubblica,
     required this.usernameAutore,
+    required this.idAutore,
     required this.titoloLibro,
   });
 
@@ -21,6 +23,7 @@ class Recensione {
       testo: json['testo'],
       pubblica: json['pubblica'],
       usernameAutore: json['usernameAutore'],
+      idAutore: json['idAutore'],
       titoloLibro: json['titoloLibro'],
     );
   }

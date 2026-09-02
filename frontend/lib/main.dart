@@ -21,10 +21,37 @@ class BookNestApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'BookNest',
-      home: SchermataPrincipale(),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF8A9A7B),
+          primary: const Color(0xFF8A9A7B),
+          secondary: const Color(0xFF9B8AA6),
+          surface: const Color(0xFFF2EDE4),
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF2EDE4),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF8A9A7B),
+          foregroundColor: Colors.white,
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Colors.white,
+          selectedItemColor: Color(0xFF9B8AA6),
+          unselectedItemColor: Color(0xFF9E9E9E),
+        ),
+        dropdownMenuTheme: const DropdownMenuThemeData(
+          textStyle: TextStyle(color: Color(0xFF2E2E2E)),
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xFF8A9A7B), width: 2),
+          ),
+        ),
+        useMaterial3: true,
+      ),
+      home: const SchermataPrincipale(),
     );
   }
 }
@@ -44,10 +71,12 @@ class _StatoSchermataPrincipale extends State<SchermataPrincipale> {
   int indiceSezione = 0;
 
   /// Sezioni accessibili anche senza autenticazione.
-  static const List<Widget> sezioniPubbliche = [
-    SchermataLibri(),
-    SchermataShowdown(),
-    SchermataClassifica(),
+  /// Implementato come getter per permettere la ricostruzione dinamica di
+  /// SchermataShowdown al cambio di utente (tramite ValueKey).
+  List<Widget> get sezioniPubbliche => [
+    const SchermataLibri(),
+    SchermataShowdown(key: ValueKey(idUtenteCorrente)),
+    const SchermataClassifica(),
   ];
 
   /// Voci di navigazione corrispondenti alle sezioni pubbliche.
@@ -70,7 +99,7 @@ class _StatoSchermataPrincipale extends State<SchermataPrincipale> {
     BottomNavigationBarItem(icon: Icon(Icons.library_books), label: 'Libreria'),
     BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Diario'),
     BottomNavigationBarItem(icon: Icon(Icons.rate_review), label: 'Recensioni'),
-    BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Utenti'),
+    BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Seguiti'),
   ];
 
   /// Apre la schermata di accesso e aggiorna l'interfaccia al rientro.
@@ -100,12 +129,18 @@ class _StatoSchermataPrincipale extends State<SchermataPrincipale> {
   @override
   Widget build(BuildContext context) {
     final autenticato = idUtenteCorrente != null;
+
     final sezioni = autenticato
         ? [...sezioniPubbliche, ...sezioniRiservate]
         : sezioniPubbliche;
+
     final voci = autenticato
         ? [...vociPubbliche, ...vociRiservate]
         : vociPubbliche;
+
+    if (indiceSezione >= sezioni.length) {
+      indiceSezione = 0;
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -140,6 +175,7 @@ class _StatoSchermataLibri extends State<SchermataLibri> {
   List<Libro> libri = [];
   bool caricamento = true;
   bool errore = false;
+  String testoRicerca = '';
 
   @override
   void initState() {
@@ -178,21 +214,65 @@ class _StatoSchermataLibri extends State<SchermataLibri> {
     if (errore) {
       return const Center(child: Text('Impossibile caricare il catalogo'));
     }
-    return ListView.builder(
-      itemCount: libri.length,
-      itemBuilder: (context, i) => ListTile(
-        title: Text(libri[i].titolo),
-        subtitle: Text(libri[i].autore),
-        trailing: libri[i].votoMedio == null
-            ? const Text('—')
-            : Text('★ ${libri[i].votoMedio!.toStringAsFixed(1)}'),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SchermataLibro(libro: libri[i]),
+
+    final query = testoRicerca.toLowerCase();
+    final libriFiltrati = query.isEmpty
+        ? libri
+        : libri
+        .where((l) =>
+    l.titolo.toLowerCase().contains(query) ||
+        l.autore.toLowerCase().contains(query))
+        .toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: 'Cerca per titolo o autore',
+              prefixIcon: const Icon(Icons.search, color: Color(0xFF8A9A7B)),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF8A9A7B)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF8A9A7B), width: 1.5),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF8A9A7B), width: 2),
+              ),
+            ),
+            onChanged: (valore) => setState(() => testoRicerca = valore),
           ),
         ),
-      ),
+        Expanded(
+          child: libriFiltrati.isEmpty
+              ? const Center(child: Text('Nessun libro corrisponde alla ricerca'))
+              : ListView.builder(
+            itemCount: libriFiltrati.length,
+            itemBuilder: (context, i) => ListTile(
+              title: Text(libriFiltrati[i].titolo),
+              subtitle: Text(libriFiltrati[i].autore),
+              trailing: libriFiltrati[i].votoMedio == null
+                  ? const Text('—')
+                  : Text(
+                  '★ ${libriFiltrati[i].votoMedio!.toStringAsFixed(1)}'),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      SchermataLibro(libro: libriFiltrati[i]),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

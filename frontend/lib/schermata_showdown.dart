@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import 'showdown.dart';
 import 'sessione.dart';
 
+/// Schermata che mostra l'elenco dei sondaggi showdown attivi, consentendo
+/// agli utenti autenticati di esprimere il proprio voto e a tutti di
+/// visualizzare i risultati aggiornati.
 class SchermataShowdown extends StatefulWidget {
   const SchermataShowdown({super.key});
 
@@ -23,9 +26,15 @@ class _StatoSchermataShowdown extends State<SchermataShowdown> {
     caricaSondaggi();
   }
 
+  /// Carica i sondaggi attivi e, subito dopo, i rispettivi conteggi.
+  ///
+  /// Endpoint pubblico: la consultazione è consentita anche ai visitatori,
+  /// mentre il voto richiede l'autenticazione.
   Future<void> caricaSondaggi() async {
     try {
-      final risposta = await http.get(Uri.parse('http://localhost:8080/api/showdown/attivi'));
+      final risposta = await http.get(
+        Uri.parse('http://localhost:8080/api/showdown/attivi'),
+      );
       final List<dynamic> datiJSON = jsonDecode(risposta.body);
 
       setState(() {
@@ -42,6 +51,10 @@ class _StatoSchermataShowdown extends State<SchermataShowdown> {
     }
   }
 
+  /// Carica i conteggi dei voti per ciascun sondaggio mostrato.
+  ///
+  /// Esegue una chiamata per sondaggio: su un numero contenuto di showdown
+  /// attivi è accettabile, ma andrebbe sostituita da un endpoint aggregato.
   Future<void> caricaRisultati() async {
     try {
       for (var s in sondaggi) {
@@ -50,18 +63,24 @@ class _StatoSchermataShowdown extends State<SchermataShowdown> {
         );
         final Map<String, dynamic> dati = jsonDecode(risposta.body);
 
-        risultati[s.id] = {
-          'A': dati['conteggioA'],
-          'B': dati['conteggioB']
-        };
+        setState(() {
+          risultati[s.id] = {
+            'A': dati['conteggioA'],
+            'B': dati['conteggioB'],
+          };
+        });
       }
-      setState(() {});
     } catch (e) {
-      // Un eventuale errore qui non impedisce la renderizzazione
-      // della lista sondaggi, omettendo solo i relativi conteggi.
+      // Un eventuale errore qui non impedisce la visualizzazione della lista
+      // dei sondaggi: vengono omessi soltanto i conteggi mancanti.
     }
   }
 
+  /// Registra il voto dell'utente e aggiorna i conteggi mostrati.
+  ///
+  /// Se l'utente ha già votato quel sondaggio il backend risponde 409: il voto
+  /// è protetto da un lock lato server e da un vincolo di unicità sulla coppia
+  /// utente-showdown.
   Future<void> vota(int idShowdown, String scelta) async {
     try {
       final risposta = await http.post(
@@ -73,20 +92,23 @@ class _StatoSchermataShowdown extends State<SchermataShowdown> {
         body: jsonEncode({'libroScelto': scelta}),
       );
 
+      if (!mounted) return;
+
       if (risposta.statusCode == 200) {
         final Map<String, dynamic> dati = jsonDecode(risposta.body);
         setState(() {
           risultati[idShowdown] = {
             'A': dati['conteggioA'],
-            'B': dati['conteggioB']
+            'B': dati['conteggioB'],
           };
         });
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Hai già votato per questo showdown')),
-          );
-        }
+        final messaggio = risposta.statusCode == 409
+            ? 'Hai già votato in questa sfida, oppure la sfida è chiusa'
+            : 'Non è stato possibile registrare il voto';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(messaggio)),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -105,10 +127,17 @@ class _StatoSchermataShowdown extends State<SchermataShowdown> {
     if (errore != null) {
       return Center(child: Text(errore!));
     }
+    if (sondaggi.isEmpty) {
+      return const Center(child: Text('Nessuno showdown attivo'));
+    }
+
+    final autenticato = idUtenteCorrente != null;
+
     return ListView.builder(
       itemCount: sondaggi.length,
       itemBuilder: (context, index) {
         final sondaggio = sondaggi[index];
+
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Padding(
@@ -123,7 +152,8 @@ class _StatoSchermataShowdown extends State<SchermataShowdown> {
                 ),
                 const SizedBox(height: 8.0),
                 ElevatedButton(
-                  onPressed: () => vota(sondaggio.id, 'A'),
+                  onPressed:
+                  autenticato ? () => vota(sondaggio.id, 'A') : null,
                   child: const Text('Vota A'),
                 ),
                 const SizedBox(height: 8.0),
@@ -132,7 +162,10 @@ class _StatoSchermataShowdown extends State<SchermataShowdown> {
                   padding: EdgeInsets.symmetric(vertical: 12.0),
                   child: Text(
                     'VS',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18.0,
+                    ),
                   ),
                 ),
                 Text(
@@ -142,11 +175,19 @@ class _StatoSchermataShowdown extends State<SchermataShowdown> {
                 ),
                 const SizedBox(height: 8.0),
                 ElevatedButton(
-                  onPressed: () => vota(sondaggio.id, 'B'),
+                  onPressed:
+                  autenticato ? () => vota(sondaggio.id, 'B') : null,
                   child: const Text('Vota B'),
                 ),
                 const SizedBox(height: 8.0),
                 Text('${risultati[sondaggio.id]?['B'] ?? 0} voti'),
+                if (!autenticato) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Accedi per votare',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
               ],
             ),
           ),

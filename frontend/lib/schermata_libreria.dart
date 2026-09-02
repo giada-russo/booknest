@@ -30,6 +30,16 @@ class _StatoSchermataLibreria extends State<SchermataLibreria> {
     'ABBANDONATO',
   ];
 
+  /// Etichette leggibili per gli stati di lettura.
+  ///
+  /// Gli identificativi restano quelli attesi dal backend nelle chiamate.
+  static const Map<String, String> etichetteStati = {
+    'DA_LEGGERE': 'Da leggere',
+    'IN_LETTURA': 'In lettura',
+    'LETTO': 'Letto',
+    'ABBANDONATO': 'Abbandonato',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -70,11 +80,51 @@ class _StatoSchermataLibreria extends State<SchermataLibreria> {
         body: jsonEncode({'nuovoStato': nuovoStato}),
       );
 
+      if (!mounted) return;
+
       if (risposta.statusCode == 200) {
         await caricaLibreria();
-      } else if (mounted) {
+      } else {
+        final messaggio = risposta.statusCode == 409
+            ? 'Passaggio di stato non consentito da quello attuale'
+            : 'Non è stato possibile aggiornare lo stato';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(risposta.body)),
+          SnackBar(content: Text(messaggio)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Errore di connessione')),
+        );
+      }
+    }
+  }
+
+  /// Assegna un voto da 1 a 5 a un libro catalogato.
+  ///
+  /// Il backend accetta il voto solo se lo stato di lettura lo consente
+  /// (pattern State): in caso contrario risponde con un errore.
+  Future<void> assegnaVoto(int idLibro, int voto) async {
+    try {
+      final risposta = await http.put(
+        Uri.parse('http://localhost:8080/api/catalogazioni/$idLibro/voto'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Utente-Id': '$idUtenteCorrente',
+        },
+        body: jsonEncode({'voto': voto}),
+      );
+      if (!mounted) return;
+
+      if (risposta.statusCode == 200) {
+        await caricaLibreria();
+      } else {
+        final messaggio = risposta.statusCode == 409
+            ? 'Puoi votare solo i libri che hai già letto'
+            : 'Non è stato possibile assegnare il voto';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(messaggio)),
         );
       }
     } catch (e) {
@@ -103,14 +153,57 @@ class _StatoSchermataLibreria extends State<SchermataLibreria> {
         final c = catalogazioni[i];
         return ListTile(
           title: Text(c.titoloLibro),
-          subtitle: Text('${c.autoreLibro} · ${c.stato}'),
-          trailing: DropdownButton<String>(
-            value: c.stato,
-            items: statiPossibili
-                .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                .toList(),
-            onChanged: (nuovo) {
-              if (nuovo != null) cambiaStato(c.idLibro, nuovo);            },
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${c.autoreLibro} · ${etichetteStati[c.stato] ?? c.stato}'),
+              if (c.stato == 'LETTO')
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(5, (i) {
+                    final valore = i + 1;
+                    return IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Icon(
+                        (c.voto != null && valore <= c.voto!)
+                            ? Icons.star
+                            : Icons.star_border,
+                        size: 20,
+                        color: const Color(0xFF9B8AA6), // Aggiunto un tocco di colore alle stelle per coerenza
+                      ),
+                      onPressed: () => assegnaVoto(c.idLibro, valore),
+                    );
+                  }),
+                ),
+            ],
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFF8A9A7B), width: 1.5),
+            ),
+            child: DropdownButton<String>(
+              value: c.stato,
+              underline: const SizedBox(),
+              icon: const Icon(Icons.expand_more,
+                  color: Color(0xFF8A9A7B), size: 20),
+              style: const TextStyle(
+                color: Color(0xFF2E2E2E),
+                fontSize: 14,
+              ),
+              items: statiPossibili
+                  .map((s) => DropdownMenuItem(
+                value: s,
+                child: Text(etichetteStati[s] ?? s),
+              ))
+                  .toList(),
+              onChanged: (nuovo) {
+                if (nuovo != null) cambiaStato(c.idLibro, nuovo);
+              },
+            ),
           ),
         );
       },

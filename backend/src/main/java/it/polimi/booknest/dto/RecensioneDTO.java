@@ -19,6 +19,7 @@ public class RecensioneDTO {
     private boolean pubblica;
     private LocalDateTime dataCreazione;
     private String usernameAutore;
+    private Long idAutore;
     private String titoloLibro;
 
     /**
@@ -33,6 +34,7 @@ public class RecensioneDTO {
         this.pubblica = recensione.isPubblica();
         this.dataCreazione = recensione.getDataCreazione();
         this.usernameAutore = recensione.getUtente().getUsername();
+        this.idAutore = recensione.getUtente().getId();
         this.titoloLibro = recensione.getLibro().getTitolo();
     }
 
@@ -54,6 +56,10 @@ public class RecensioneDTO {
 
     public String getUsernameAutore() {
         return usernameAutore;
+    }
+
+    public Long getIdAutore() {
+        return idAutore;
     }
 
     public String getTitoloLibro() {

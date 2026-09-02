@@ -117,10 +117,14 @@ public class UtenteService {
                 .orElseThrow(() -> new UtenteNonTrovatoException(idSeguace));
         Utente seguito = trovaPerId(idSeguito);
 
-        if (!seguace.getSeguiti().add(seguito)) {
+        boolean giaSeguito = seguace.getSeguiti().stream()
+                .anyMatch(u -> u.getId().equals(idSeguito));
+
+        if (giaSeguito) {
             throw new GiaSeguitoException(idSeguace, idSeguito);
         }
 
+        seguace.getSeguiti().add(seguito);
         utenteRepository.save(seguace);
     }
 
@@ -138,7 +142,7 @@ public class UtenteService {
         Utente seguace = utenteRepository.trovaConSeguiti(idSeguace)
                 .orElseThrow(() -> new UtenteNonTrovatoException(idSeguace));
         Utente seguito = trovaPerId(idSeguito);
-        seguace.getSeguiti().remove(seguito);
+        seguace.getSeguiti().removeIf(u -> u.getId().equals(seguito.getId()));
         utenteRepository.save(seguace);
     }
 
@@ -156,24 +160,5 @@ public class UtenteService {
         return utenteRepository.trovaConSeguiti(idUtente)
                 .orElseThrow(() -> new UtenteNonTrovatoException(idUtente))
                 .getSeguiti();
-    }
-
-    /**
-     * Restituisce tutti gli utenti registrati, escluso quello indicato.
-     * <p>
-     * Serve al client per mostrare le persone che è possibile seguire:
-     * l'utente stesso viene escluso perché il follow verso se stessi non è consentito.
-     *
-     * @param idUtente l'identificativo dell'utente da escludere
-     * @return la lista degli altri utenti registrati
-     * @throws UtenteNonTrovatoException se l'utente non esiste
-     */
-    public List<Utente> trovaAltriUtenti(Long idUtente) {
-        trovaPerId(idUtente);
-
-        return utenteRepository.findAll()
-                .stream()
-                .filter(u -> !u.getId().equals(idUtente))
-                .toList();
     }
 }

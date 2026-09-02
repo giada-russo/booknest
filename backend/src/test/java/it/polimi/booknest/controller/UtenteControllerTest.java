@@ -100,18 +100,4 @@ class UtenteControllerTest {
         assertEquals(1, risultato.size());
         assertEquals("marcoros", risultato.get(0).getUsername());
     }
-
-    @Test
-    void trovaAltriUtentiConverteGliUtentiInDTORidotto() {
-        // Arrange
-        Utente marco = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
-        when(utenteService.trovaAltriUtenti(1L)).thenReturn(List.of(marco));
-
-        // Act
-        List<UtenteRidottoDTO> risultato = utenteController.trovaAltriUtenti(1L);
-
-        // Assert
-        assertEquals(1, risultato.size());
-        assertEquals("marcoros", risultato.get(0).getUsername());
-    }
 }

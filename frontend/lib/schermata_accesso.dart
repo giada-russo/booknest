@@ -106,63 +106,108 @@ class _StatoSchermataAccesso extends State<SchermataAccesso> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('BookNest')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: ListView(
-          children: [
-            const SizedBox(height: 40),
-            Text(
-              modalitaRegistrazione ? 'Crea un account' : 'Accedi a BookNest',
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-
-            if (modalitaRegistrazione) ...[
-              TextField(
-                controller: controlloNome,
-                decoration: const InputDecoration(labelText: 'Nome'),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Card(
+              elevation: 2,
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controlloCognome,
-                decoration: const InputDecoration(labelText: 'Cognome'),
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.menu_book,
+                      size: 56,
+                      color: Color(0xFF8A9A7B),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      modalitaRegistrazione
+                          ? 'Crea un account'
+                          : 'Accedi a BookNest',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    if (modalitaRegistrazione) ...[
+                      TextField(
+                        controller: controlloNome,
+                        decoration: const InputDecoration(
+                          labelText: 'Nome',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: controlloCognome,
+                        decoration: const InputDecoration(
+                          labelText: 'Cognome',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: controlloEmail,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    TextField(
+                      controller: controlloUsername,
+                      decoration: const InputDecoration(
+                        labelText: 'Username',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controlloPassword,
+                      decoration: const InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(),
+                      ),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF9B8AA6),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: inCorso
+                            ? null
+                            : (modalitaRegistrazione ? registrati : accedi),
+                        child: Text(
+                          modalitaRegistrazione ? 'Registrati' : 'Accedi',
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => setState(
+                            () => modalitaRegistrazione = !modalitaRegistrazione,
+                      ),
+                      child: Text(modalitaRegistrazione
+                          ? 'Hai già un account? Accedi'
+                          : 'Non hai un account? Registrati'),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controlloEmail,
-                decoration: const InputDecoration(labelText: 'Email'),
-              ),
-              const SizedBox(height: 12),
-            ],
-
-            TextField(
-              controller: controlloUsername,
-              decoration: const InputDecoration(labelText: 'Username'),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controlloPassword,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 24),
-
-            ElevatedButton(
-              onPressed: inCorso
-                  ? null
-                  : (modalitaRegistrazione ? registrati : accedi),
-              child: Text(modalitaRegistrazione ? 'Registrati' : 'Accedi'),
-            ),
-            TextButton(
-              onPressed: () => setState(
-                    () => modalitaRegistrazione = !modalitaRegistrazione,
-              ),
-              child: Text(modalitaRegistrazione
-                  ? 'Hai già un account? Accedi'
-                  : 'Non hai un account? Registrati'),
-            ),
-          ],
+          ),
         ),
       ),
     );

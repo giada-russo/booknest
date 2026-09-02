@@ -92,8 +92,11 @@ class _StatoSchermataRecensioni extends State<SchermataRecensioni> {
         idLibroScelto = null;
         await caricaRecensioni();
       } else if (mounted) {
+        final messaggio = risposta.statusCode == 409
+            ? 'Puoi recensire solo i libri che hai già letto, e una sola volta per libro'
+            : 'Non è stato possibile salvare la recensione';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(risposta.body)),
+          SnackBar(content: Text(messaggio)),
         );
       }
     } catch (e) {
@@ -120,6 +123,7 @@ class _StatoSchermataRecensioni extends State<SchermataRecensioni> {
                 hint: const Text('Scegli un libro'),
                 isExpanded: true,
                 items: libreria
+                    .where((c) => c.stato == 'LETTO')
                     .map((c) => DropdownMenuItem(
                   value: c.idLibro,
                   child: Text(c.titoloLibro),
@@ -177,7 +181,24 @@ class _StatoSchermataRecensioni extends State<SchermataRecensioni> {
               return ListTile(
                 title: Text(r.titoloLibro),
                 subtitle: Text(r.testo),
-                trailing: Icon(r.pubblica ? Icons.public : Icons.lock),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      r.pubblica ? Icons.public : Icons.lock_outline,
+                      size: 16,
+                      color: Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      r.pubblica ? 'Pubblica' : 'Privata',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           ),
@@ -185,6 +206,8 @@ class _StatoSchermataRecensioni extends State<SchermataRecensioni> {
           right: 16,
           bottom: 16,
           child: FloatingActionButton(
+            backgroundColor: const Color(0xFF9B8AA6),
+            foregroundColor: Colors.white,
             onPressed: apriModuloRecensione,
             child: const Icon(Icons.add),
           ),

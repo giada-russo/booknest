@@ -196,6 +196,8 @@ class UtenteServiceTest {
     void seguireDueVolteLaStessaPersonaSollevaEccezione() {
         Utente seguace = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
         Utente seguito = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
+        ReflectionTestUtils.setField(seguace, "id", 1L);
+        ReflectionTestUtils.setField(seguito, "id", 2L);
         seguace.getSeguiti().add(seguito);
 
         when(utenteRepository.trovaConSeguiti(1L)).thenReturn(Optional.of(seguace));
@@ -209,6 +211,8 @@ class UtenteServiceTest {
         // Arrange
         Utente seguace = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
         Utente seguito = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
+        ReflectionTestUtils.setField(seguace, "id", 1L);
+        ReflectionTestUtils.setField(seguito, "id", 2L);
         seguace.getSeguiti().add(seguito);
 
         when(utenteRepository.trovaConSeguiti(1L)).thenReturn(Optional.of(seguace));
@@ -239,24 +243,7 @@ class UtenteServiceTest {
         assertTrue(risultato.contains(seguito));
     }
 
-    @Test
-    void trovaAltriUtentiEscludeLUtenteRichiedente() {
-        // Arrange
-        Utente romina = new Utente("Romina", "Battista", "romibat27", "romibat@gmail.com", "hash");
-        Utente marco = new Utente("Marco", "Rossi", "marcoros", "marco@gmail.com", "hash");
-        ReflectionTestUtils.setField(romina, "id", 1L);
-        ReflectionTestUtils.setField(marco, "id", 2L);
 
-        when(utenteRepository.findById(1L)).thenReturn(Optional.of(romina));
-        when(utenteRepository.findAll()).thenReturn(List.of(romina, marco));
-
-        // Act
-        List<Utente> risultato = utenteService.trovaAltriUtenti(1L);
-
-        // Assert
-        assertEquals(1, risultato.size());
-        assertEquals("marcoros", risultato.get(0).getUsername());
-    }
 
     @Test
     void seguireDaUtenteInesistenteSollevaEccezione() {

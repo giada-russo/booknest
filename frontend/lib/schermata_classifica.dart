@@ -17,6 +17,16 @@ class SchermataClassifica extends StatefulWidget {
 }
 
 class _StatoSchermataClassifica extends State<SchermataClassifica> {
+  /// Etichette leggibili per i criteri restituiti dal backend.
+  ///
+  /// Gli identificativi non compaiono nell'interfaccia ma restano quelli
+  /// attesi dal server nelle chiamate.
+  static const Map<String, String> etichette = {
+    'piu-catalogati': 'Più catalogati',
+    'migliore-voto': 'Miglior voto',
+    'piu-recensiti': 'Più recensiti',
+  };
+
   List<String> criteri = [];
   String? criterioScelto;
   List<Libro> libri = [];
@@ -79,16 +89,33 @@ class _StatoSchermataClassifica extends State<SchermataClassifica> {
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: DropdownButton<String>(
-            value: criterioScelto,
-            isExpanded: true,
-            items: criteri
-                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                .toList(),
-            onChanged: (nuovo) {
-              setState(() => criterioScelto = nuovo);
-              caricaClassifica();
-            },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF8A9A7B), width: 1.5),
+            ),
+            child: DropdownButton<String>(
+              value: criterioScelto,
+              isExpanded: true,
+              underline: const SizedBox(),
+              icon: const Icon(Icons.expand_more, color: Color(0xFF8A9A7B)),
+              style: const TextStyle(
+                color: Color(0xFF2E2E2E),
+                fontSize: 16,
+              ),
+              items: criteri
+                  .map((c) => DropdownMenuItem(
+                value: c,
+                child: Text(etichette[c] ?? c),
+              ))
+                  .toList(),
+              onChanged: (nuovo) {
+                setState(() => criterioScelto = nuovo);
+                caricaClassifica();
+              },
+            ),
           ),
         ),
         Expanded(
@@ -103,7 +130,14 @@ class _StatoSchermataClassifica extends State<SchermataClassifica> {
                   builder: (context) => SchermataLibro(libro: libri[i]),
                 ),
               ),
-              leading: Text('${i + 1}'),
+              leading: CircleAvatar(
+                radius: 16,
+                backgroundColor: const Color(0xFF9B8AA6),
+                child: Text(
+                  '${i + 1}',
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
               title: Text(libri[i].titolo),
               subtitle: Text(libri[i].autore),
             ),
